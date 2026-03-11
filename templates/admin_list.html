@@ -13,66 +13,71 @@
   </section>
 
   <section class="panel">
-    <h2>Категории игр</h2>
-    <form method="post" action="{{ url_for('add_category') }}" class="category-form">
-      <input type="text" name="name" placeholder="Новая категория" required>
-      <button type="submit">Добавить категорию</button>
-    </form>
+    <nav class="admin-tabs">
+      <a class="{% if active_tab == 'games' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='games') }}">База игр</a>
+      <a class="{% if active_tab == 'categories' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='categories') }}">Категории</a>
+    </nav>
 
-    <div class="category-list">
-      {% for game_type in game_types %}
-        <div class="category-item">
-          <form method="post" action="{{ url_for('edit_category', type_id=game_type['id']) }}">
-            <input type="text" name="name" value="{{ game_type['name'] }}" required>
-            <button type="submit">Сохранить</button>
-          </form>
-          <form method="post" action="{{ url_for('delete_category', type_id=game_type['id']) }}" onsubmit="return confirm('Удалить категорию?');">
-            <button type="submit" class="button-danger">Удалить</button>
-          </form>
-        </div>
-      {% else %}
-        <p class="empty-row">Категории пока не добавлены.</p>
-      {% endfor %}
-    </div>
-  </section>
+    {% if active_tab == 'categories' %}
+      <h2>Категории игр</h2>
+      <form method="post" action="{{ url_for('add_category') }}" class="category-form">
+        <input type="text" name="name" placeholder="Новая категория" required>
+        <button type="submit">Добавить категорию</button>
+      </form>
 
-  <section class="panel">
-    <div class="admin-table-wrapper">
-      <table class="admin-table">
-        <thead>
-          <tr>
-            <th>Название</th>
-            <th>Тип</th>
-            <th>Участники</th>
-            <th>Возраст</th>
-            <th>Длительность</th>
-            <th>Файлы</th>
-            <th>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for game in games %}
+      <div class="category-list">
+        {% for game_type in game_types %}
+          <div class="category-item">
+            <form method="post" action="{{ url_for('edit_category', type_id=game_type['id']) }}">
+              <input type="text" name="name" value="{{ game_type['name'] }}" required>
+              <button type="submit">Сохранить</button>
+            </form>
+            <form method="post" action="{{ url_for('delete_category', type_id=game_type['id']) }}" onsubmit="return confirm('Удалить категорию?');">
+              <button type="submit" class="button-danger">Удалить</button>
+            </form>
+          </div>
+        {% else %}
+          <p class="empty-row">Категории пока не добавлены.</p>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="admin-table-wrapper">
+        <table class="admin-table">
+          <thead>
             <tr>
-              <td>{{ game['title'] }}</td>
-              <td>{{ game['game_type'] }}</td>
-              <td>{{ game['participants'] }}</td>
-              <td>{{ game['age_category'] }}</td>
-              <td>{{ game['duration'] }}</td>
-              <td>{{ parse_files_json(game['files_json'])|length }}</td>
-              <td class="table-actions">
-                <a href="{{ url_for('edit_game', game_id=game['id']) }}">Редактировать</a>
-                <form method="post" action="{{ url_for('delete_game', game_id=game['id']) }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
-                  <button type="submit" class="button-danger">Удалить</button>
-                </form>
-              </td>
+              <th>Название</th>
+              <th>Тип</th>
+              <th>Участники</th>
+              <th>Возраст</th>
+              <th>Длительность</th>
+              <th>Файлы</th>
+              <th>Действия</th>
             </tr>
-          {% else %}
-            <tr>
-              <td colspan="7" class="empty-row">База пока пуста.</td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {% for game in games %}
+              <tr>
+                <td>{{ game['title'] }}</td>
+                <td>{{ game['game_type'] }}</td>
+                <td>{{ game['participants'] }}</td>
+                <td>{{ game['age_category'] }}</td>
+                <td>{{ game['duration'] }}</td>
+                <td>{{ parse_files_json(game['files_json'])|length }}</td>
+                <td class="table-actions">
+                  <a href="{{ url_for('edit_game', game_id=game['id']) }}">Редактировать</a>
+                  <form method="post" action="{{ url_for('delete_game', game_id=game['id']) }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
+                    <button type="submit" class="button-danger">Удалить</button>
+                  </form>
+                </td>
+              </tr>
+            {% else %}
+              <tr>
+                <td colspan="7" class="empty-row">База пока пуста.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
   </section>
 {% endblock %}

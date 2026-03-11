@@ -13,12 +13,12 @@
   <section class="panel">
     <form method="post" enctype="multipart/form-data" class="form-grid">
       <label>
-        <span>Название</span>
+        <span>Название <strong class="required-mark">*</strong></span>
         <input type="text" name="title" value="{{ game.get('title', '') }}" required>
       </label>
 
       <label>
-        <span>Тип</span>
+        <span>Тип <strong class="required-mark">*</strong></span>
         <select name="game_type" required>
           <option value="" disabled {% if not game.get('game_type') %}selected{% endif %}>Выберите тип</option>
           {% for game_type in game_types %}
@@ -28,17 +28,17 @@
       </label>
 
       <label>
-        <span>Цель</span>
+        <span>Цель <strong class="required-mark">*</strong></span>
         <textarea name="goal" rows="3" required>{{ game.get('goal', '') }}</textarea>
       </label>
 
       <label>
-        <span>Количество участников</span>
+        <span>Количество участников <strong class="required-mark">*</strong></span>
         <input type="text" name="participants" value="{{ game.get('participants', '') }}" required>
       </label>
 
       <label>
-        <span>Возрастная категория</span>
+        <span>Возрастная категория <strong class="required-mark">*</strong></span>
         <select name="age_category" required>
           <option value="" disabled {% if not game.get('age_category') %}selected{% endif %}>Выберите возраст</option>
           {% for age in age_options %}
@@ -48,12 +48,12 @@
       </label>
 
       <label>
-        <span>Длительность</span>
+        <span>Длительность <strong class="required-mark">*</strong></span>
         <input type="text" name="duration" value="{{ game.get('duration', '') }}" required>
       </label>
 
       <label>
-        <span>Место проведения</span>
+        <span>Место проведения <strong class="required-mark">*</strong></span>
         <select name="location" required>
           <option value="" disabled {% if not game.get('location') %}selected{% endif %}>Выберите место</option>
           {% for location in location_options %}
@@ -64,18 +64,18 @@
 
       <label>
         <span>Необходимое оборудование</span>
-        <textarea name="equipment" rows="3" required>{{ game.get('equipment', '') }}</textarea>
+        <textarea name="equipment" rows="3" placeholder="Оставьте пустым, если оборудование не нужно">{{ game.get('equipment', '') }}</textarea>
       </label>
 
       <label class="full-width">
-        <span>Правила</span>
+        <span>Правила <strong class="required-mark">*</strong></span>
         <textarea name="rules" rows="8" required>{{ game.get('rules', '') }}</textarea>
       </label>
 
       <label class="full-width">
         <span>Необходимые файлы</span>
         <input type="file" name="files" multiple>
-        <small>Поддерживаются документы, изображения, архивы, аудио и видео до 32 МБ на запрос.</small>
+        <small>Поддерживаются документы, изображения, архивы, аудио и видео, включая OpenDocument, до 512 МБ на запрос.</small>
       </label>
 
       {% if existing_files %}

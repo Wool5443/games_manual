@@ -4,12 +4,28 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}База игр и упражнений{% endblock %}</title>
+    <script>
+      (function () {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          document.documentElement.dataset.theme = "dark";
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
     <header class="site-header">
       <div class="container">
         <a class="brand" href="{{ url_for('games_list') }}">База игр и упражнений</a>
+        <div class="header-tools">
+          <button class="theme-toggle" type="button" id="theme-toggle" aria-pressed="false">
+            <span class="theme-toggle-track" aria-hidden="true">
+              <span class="theme-toggle-thumb"></span>
+            </span>
+            <span class="theme-toggle-label">Тёмная тема</span>
+          </button>
+        </div>
         <nav class="nav">
           <a href="{{ url_for('games_list') }}">Просмотр базы</a>
           <a href="{{ url_for('add_game') }}">Добавить игру</a>
@@ -30,5 +46,34 @@
       {% endwith %}
       {% block content %}{% endblock %}
     </main>
+    <script>
+      (function () {
+        const root = document.documentElement;
+        const toggle = document.getElementById("theme-toggle");
+        if (!toggle) return;
+
+        const applyTheme = (theme) => {
+          if (theme === "dark") {
+            root.dataset.theme = "dark";
+            toggle.setAttribute("aria-pressed", "true");
+          } else {
+            delete root.dataset.theme;
+            toggle.setAttribute("aria-pressed", "false");
+          }
+        };
+
+        applyTheme(localStorage.getItem("theme"));
+
+        toggle.addEventListener("click", function () {
+          const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
+          if (nextTheme === "dark") {
+            localStorage.setItem("theme", "dark");
+          } else {
+            localStorage.removeItem("theme");
+          }
+          applyTheme(nextTheme);
+        });
+      })();
+    </script>
   </body>
 </html>

@@ -30,6 +30,11 @@ ALLOWED_EXTENSIONS = {
     "mp4",
     "ppt",
     "pptx",
+    "odt",
+    "ods",
+    "odp",
+    "odg",
+    "odf",
     "zip",
 }
 
@@ -54,7 +59,6 @@ FORM_LABELS = {
     "age_category": "Возрастная категория",
     "duration": "Длительность",
     "location": "Место проведения",
-    "equipment": "Необходимое оборудование",
     "rules": "Правила",
 }
 
@@ -86,7 +90,7 @@ CREATE TABLE IF NOT EXISTS game_types (
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "dev-secret-key-change-me"
-app.config["MAX_CONTENT_LENGTH"] = 32 * 1024 * 1024
+app.config["MAX_CONTENT_LENGTH"] = 512 * 1024 * 1024
 
 
 def load_game_types() -> list[str]:
@@ -204,6 +208,9 @@ def build_filters(args) -> tuple[str, list[str]]:
         clauses.append("files_json LIKE ?")
         params.append(f"%{files_query}%")
 
+    if args.get("no_equipment") == "1":
+        clauses.append("(equipment = '' OR equipment IS NULL)")
+
     where_sql = f"WHERE {' AND '.join(clauses)}" if clauses else ""
     return where_sql, params
 
@@ -244,6 +251,8 @@ def extract_game_form_data(form) -> dict[str, str]:
 def validate_game_form(data: dict[str, str]) -> list[str]:
     errors = []
     for key, value in data.items():
+        if key == "equipment":
+            continue
         if not value:
             errors.append(f"Поле «{FORM_LABELS.get(key, key)}» обязательно для заполнения.")
     return errors
@@ -340,11 +349,15 @@ def add_game():
 @app.route("/admin")
 def admin_list():
     init_db()
+    active_tab = request.args.get("tab", "games")
+    if active_tab not in {"games", "categories"}:
+        active_tab = "games"
     games = get_db().execute("SELECT * FROM games ORDER BY updated_at DESC, id DESC").fetchall()
     return render_template(
         "admin_list.html",
         games=games,
         game_types=fetch_game_type_rows(),
+        active_tab=active_tab,
         parse_files_json=parse_files_json,
     )
 
@@ -436,7 +449,7 @@ def delete_game(game_id: int):
     db.execute("DELETE FROM games WHERE id = ?", (game_id,))
     db.commit()
     flash("Запись удалена.", "success")
-    return redirect(url_for("admin_list"))
+    return redirect(url_for("admin_list", tab="games"))
 
 
 @app.post("/admin/categories")
@@ -445,7 +458,7 @@ def add_category():
     name = request.form.get("name", "").strip()
     if not name:
         flash("Название категории не может быть пустым.", "error")
-        return redirect(url_for("admin_list"))
+        return redirect(url_for("admin_list", tab="categories"))
 
     db = get_db()
     try:
@@ -455,7 +468,7 @@ def add_category():
         flash("Такая категория уже существует.", "warning")
     else:
         flash("Категория добавлена.", "success")
-    return redirect(url_for("admin_list"))
+    return redirect(url_for("admin_list", tab="categories"))
 
 
 @app.post("/admin/categories/<int:type_id>/edit")
@@ -464,7 +477,7 @@ def edit_category(type_id: int):
     new_name = request.form.get("name", "").strip()
     if not new_name:
         flash("Название категории не может быть пустым.", "error")
-        return redirect(url_for("admin_list"))
+        return redirect(url_for("admin_list", tab="categories"))
 
     db = get_db()
     current = db.execute("SELECT * FROM game_types WHERE id = ?", (type_id,)).fetchone()
@@ -479,7 +492,7 @@ def edit_category(type_id: int):
         flash("Такая категория уже существует.", "warning")
     else:
         flash("Категория обновлена.", "success")
-    return redirect(url_for("admin_list"))
+    return redirect(url_for("admin_list", tab="categories"))
 
 
 @app.post("/admin/categories/<int:type_id>/delete")
@@ -493,12 +506,12 @@ def delete_category(type_id: int):
     usage_count = db.execute("SELECT COUNT(*) FROM games WHERE game_type = ?", (current["name"],)).fetchone()[0]
     if usage_count:
         flash("Нельзя удалить категорию, пока она используется в играх.", "error")
-        return redirect(url_for("admin_list"))
+        return redirect(url_for("admin_list", tab="categories"))
 
     db.execute("DELETE FROM game_types WHERE id = ?", (type_id,))
     db.commit()
     flash("Категория удалена.", "success")
-    return redirect(url_for("admin_list"))
+    return redirect(url_for("admin_list", tab="categories"))
 
 
 @app.route("/uploads/<path:filename>")
