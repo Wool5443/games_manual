@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}{% if is_edit %}Редактирование{% else %}Добавление игры{% endif %}{% endblock %}
+
+{% block content %}
+  <section class="hero compact">
+    <div>
+      <p class="eyebrow">{% if is_edit %}Администрирование{% else %}Новая запись{% endif %}</p>
+      <h1>{% if is_edit %}Редактирование записи{% else %}Добавление новой игры или упражнения{% endif %}</h1>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form method="post" enctype="multipart/form-data" class="form-grid">
+      <label>
+        <span>Название</span>
+        <input type="text" name="title" value="{{ game.get('title', '') }}" required>
+      </label>
+
+      <label>
+        <span>Тип</span>
+        <select name="game_type" required>
+          <option value="" disabled {% if not game.get('game_type') %}selected{% endif %}>Выберите тип</option>
+          {% for game_type in game_types %}
+            <option value="{{ game_type }}" {% if game.get('game_type', '') == game_type %}selected{% endif %}>{{ game_type }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Цель</span>
+        <textarea name="goal" rows="3" required>{{ game.get('goal', '') }}</textarea>
+      </label>
+
+      <label>
+        <span>Количество участников</span>
+        <input type="text" name="participants" value="{{ game.get('participants', '') }}" required>
+      </label>
+
+      <label>
+        <span>Возрастная категория</span>
+        <select name="age_category" required>
+          <option value="" disabled {% if not game.get('age_category') %}selected{% endif %}>Выберите возраст</option>
+          {% for age in age_options %}
+            <option value="{{ age }}" {% if game.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Длительность</span>
+        <input type="text" name="duration" value="{{ game.get('duration', '') }}" required>
+      </label>
+
+      <label>
+        <span>Место проведения</span>
+        <select name="location" required>
+          <option value="" disabled {% if not game.get('location') %}selected{% endif %}>Выберите место</option>
+          {% for location in location_options %}
+            <option value="{{ location }}" {% if game.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Необходимое оборудование</span>
+        <textarea name="equipment" rows="3" required>{{ game.get('equipment', '') }}</textarea>
+      </label>
+
+      <label class="full-width">
+        <span>Правила</span>
+        <textarea name="rules" rows="8" required>{{ game.get('rules', '') }}</textarea>
+      </label>
+
+      <label class="full-width">
+        <span>Необходимые файлы</span>
+        <input type="file" name="files" multiple>
+        <small>Поддерживаются документы, изображения, архивы, аудио и видео до 32 МБ на запрос.</small>
+      </label>
+
+      {% if existing_files %}
+        <fieldset class="full-width existing-files">
+          <legend>Текущие файлы</legend>
+          {% for filename in existing_files %}
+            <label class="checkbox-row">
+              <input type="checkbox" name="delete_files" value="{{ filename }}">
+              <span>Удалить {{ filename }}</span>
+            </label>
+          {% endfor %}
+        </fieldset>
+      {% endif %}
+
+      <div class="actions full-width">
+        <button type="submit">{% if is_edit %}Сохранить изменения{% else %}Добавить запись{% endif %}</button>
+        <a class="button-secondary" href="{% if is_edit %}{{ url_for('admin_list') }}{% else %}{{ url_for('games_list') }}{% endif %}">Отмена</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Просмотр базы{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Каталог</p>
+      <h1>Просмотр базы игр и упражнений</h1>
+      <p class="lead">Поиск по ключевым словам, фильтры по всем полям и сортировка по любому свойству.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <form method="get" class="filters-grid">
+      <label>
+        <span>Ключевые слова</span>
+        <input type="text" name="search" value="{{ filters.get('search', '') }}" placeholder="Название, цель, правила...">
+      </label>
+
+      <label>
+        <span>Тип</span>
+        <select name="game_type">
+          <option value="">Любой тип</option>
+          {% for game_type in game_types %}
+            <option value="{{ game_type }}" {% if filters.get('game_type', '') == game_type %}selected{% endif %}>{{ game_type }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Название</span>
+        <input type="text" name="title" value="{{ filters.get('title', '') }}">
+      </label>
+
+      <label>
+        <span>Цель</span>
+        <input type="text" name="goal" value="{{ filters.get('goal', '') }}">
+      </label>
+
+      <label>
+        <span>Количество участников</span>
+        <input type="text" name="participants" value="{{ filters.get('participants', '') }}">
+      </label>
+
+      <label>
+        <span>Возрастная категория</span>
+        <select name="age_category">
+          <option value="">Любая</option>
+          {% for age in age_options %}
+            <option value="{{ age }}" {% if filters.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Длительность</span>
+        <input type="text" name="duration" value="{{ filters.get('duration', '') }}">
+      </label>
+
+      <label>
+        <span>Место проведения</span>
+        <select name="location">
+          <option value="">Любое</option>
+          {% for location in location_options %}
+            <option value="{{ location }}" {% if filters.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Оборудование</span>
+        <input type="text" name="equipment" value="{{ filters.get('equipment', '') }}">
+      </label>
+
+      <label>
+        <span>Правила</span>
+        <input type="text" name="rules" value="{{ filters.get('rules', '') }}">
+      </label>
+
+      <label>
+        <span>Необходимые файлы</span>
+        <input type="text" name="files_json" value="{{ filters.get('files_json', '') }}" placeholder="Имя файла">
+      </label>
+
+      <label>
+        <span>Сортировка</span>
+        <select name="sort">
+          {% for field, label in sortable_fields.items() %}
+            <option value="{{ field }}" {% if sort == field %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </label>
+
+      <label>
+        <span>Порядок</span>
+        <select name="order">
+          <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+          <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+        </select>
+      </label>
+
+      <div class="actions">
+        <button type="submit">Применить</button>
+        <a class="button-secondary" href="{{ url_for('games_list') }}">Сбросить</a>
+      </div>
+    </form>
+  </section>
+
+  <section class="card-grid">
+    {% for game in games %}
+      <article class="card">
+        <div class="card-header">
+          <h2>{{ game['title'] }}</h2>
+          <span class="tag">{{ game['game_type'] }}</span>
+        </div>
+        <dl class="details">
+          <div><dt>Цель</dt><dd>{{ game['goal'] }}</dd></div>
+          <div><dt>Участники</dt><dd>{{ game['participants'] }}</dd></div>
+          <div><dt>Возраст</dt><dd>{{ game['age_category'] }}</dd></div>
+          <div><dt>Длительность</dt><dd>{{ game['duration'] }}</dd></div>
+          <div><dt>Место</dt><dd>{{ game['location'] }}</dd></div>
+          <div><dt>Оборудование</dt><dd>{{ game['equipment'] }}</dd></div>
+        </dl>
+        <section class="card-text">
+          <h3>Правила</h3>
+          <p>{{ game['rules'] }}</p>
+        </section>
+        <section class="card-files">
+          <h3>Файлы</h3>
+          {% set files = parse_files_json(game['files_json']) %}
+          {% if files %}
+            <ul class="file-list">
+              {% for filename in files %}
+                <li><a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" rel="noopener">{{ filename }}</a></li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>Нет прикреплённых файлов.</p>
+          {% endif %}
+        </section>
+      </article>
+    {% else %}
+      <div class="empty-state">
+        <h2>Ничего не найдено</h2>
+        <p>Измените фильтры или добавьте первую запись в базе.</p>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}
