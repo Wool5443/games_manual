@@ -74,7 +74,19 @@
 
       <label class="full-width">
         <span>Необходимые файлы</span>
-        <input type="file" name="files" multiple>
+        <div class="file-dropzone" id="file-dropzone">
+          <input class="file-input" id="game-files" type="file" name="files" multiple>
+          <div class="file-dropzone-inner">
+            <div class="file-dropzone-copy">
+              <strong>Перетащите файлы сюда</strong>
+              <span>или выберите их вручную</span>
+            </div>
+            <button class="file-picker-button" type="button" id="file-picker-button">Добавить файлы</button>
+          </div>
+          <ul class="selected-files" id="selected-files">
+            <li>Файлы не выбраны</li>
+          </ul>
+        </div>
         <small>Поддерживаются документы, изображения, архивы, аудио и видео, включая OpenDocument, до 512 МБ на запрос.</small>
       </label>
 
@@ -96,4 +108,64 @@
       </div>
     </form>
   </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      const dropzone = document.getElementById("file-dropzone");
+      const input = document.getElementById("game-files");
+      const button = document.getElementById("file-picker-button");
+      const fileList = document.getElementById("selected-files");
+      if (!dropzone || !input || !button || !fileList) return;
+
+      const renderFiles = () => {
+        const files = Array.from(input.files || []);
+        fileList.innerHTML = "";
+
+        if (!files.length) {
+          const item = document.createElement("li");
+          item.textContent = "Файлы не выбраны";
+          fileList.appendChild(item);
+          return;
+        }
+
+        files.forEach((file) => {
+          const item = document.createElement("li");
+          item.textContent = file.name;
+          fileList.appendChild(item);
+        });
+      };
+
+      button.addEventListener("click", function () {
+        input.click();
+      });
+
+      input.addEventListener("change", renderFiles);
+
+      ["dragenter", "dragover"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropzone.classList.add("is-dragover");
+        });
+      });
+
+      ["dragleave", "dragend", "drop"].forEach((eventName) => {
+        dropzone.addEventListener(eventName, function (event) {
+          event.preventDefault();
+          dropzone.classList.remove("is-dragover");
+        });
+      });
+
+      dropzone.addEventListener("drop", function (event) {
+        const files = event.dataTransfer ? event.dataTransfer.files : null;
+        if (!files || !files.length) return;
+
+        const transfer = new DataTransfer();
+        Array.from(files).forEach((file) => transfer.items.add(file));
+        input.files = transfer.files;
+        renderFiles();
+      });
+    })();
+  </script>
 {% endblock %}

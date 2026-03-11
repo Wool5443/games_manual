@@ -7,11 +7,13 @@
     <script>
       (function () {
         const savedTheme = localStorage.getItem("theme");
-        if (savedTheme === "dark") {
+        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (savedTheme === "dark" || (!savedTheme && systemPrefersDark)) {
           document.documentElement.dataset.theme = "dark";
         }
       })();
     </script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='palette.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
   </head>
   <body>
@@ -51,6 +53,7 @@
         const root = document.documentElement;
         const toggle = document.getElementById("theme-toggle");
         if (!toggle) return;
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
         const applyTheme = (theme) => {
           if (theme === "dark") {
@@ -62,7 +65,13 @@
           }
         };
 
-        applyTheme(localStorage.getItem("theme"));
+        const getPreferredTheme = () => {
+          const savedTheme = localStorage.getItem("theme");
+          if (savedTheme) return savedTheme;
+          return mediaQuery.matches ? "dark" : "light";
+        };
+
+        applyTheme(getPreferredTheme());
 
         toggle.addEventListener("click", function () {
           const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
@@ -73,7 +82,14 @@
           }
           applyTheme(nextTheme);
         });
+
+        mediaQuery.addEventListener("change", function () {
+          if (!localStorage.getItem("theme")) {
+            applyTheme(getPreferredTheme());
+          }
+        });
       })();
     </script>
+    {% block scripts %}{% endblock %}
   </body>
 </html>
