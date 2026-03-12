@@ -27,7 +27,7 @@
           <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
             <span class="dropdown-multiselect-text" data-dropdown-label>
               {% if selected_types %}
-                {{ selected_types[0] }}{% if selected_types|length > 1 %}, ...{% endif %}
+                {{ selected_types|join(', ') }}
               {% else %}
                 Выберите типы
               {% endif %}
@@ -184,7 +184,7 @@
             .filter(function (option) { return option.checked; })
             .map(function (option) { return option.value; });
           label.textContent = selected.length
-            ? selected[0] + (selected.length > 1 ? ", ..." : "")
+            ? selected.join(", ")
             : "Выберите типы";
         };
 
