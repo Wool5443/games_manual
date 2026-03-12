@@ -58,14 +58,27 @@
         <input type="text" name="participants" value="{{ game.get('participants', '') }}" required>
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Возрастная категория <strong class="required-mark">*</strong></span>
-        <select name="age_category" required>
-          <option value="" disabled {% if not game.get('age_category') %}selected{% endif %}>Выберите возраст</option>
-          {% for age in age_options %}
-            <option value="{{ age }}" {% if game.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
-          {% endfor %}
-        </select>
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label>
+              {{ game.get('age_category', '') or 'Выберите возраст' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              {% for age in age_options %}
+                <label class="dropdown-option">
+                  <input type="radio" name="age_category" value="{{ age }}" {% if game.get('age_category', '') == age %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ age }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
       <label>
@@ -73,14 +86,27 @@
         <input type="text" name="duration" value="{{ game.get('duration', '') }}" required>
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Место проведения <strong class="required-mark">*</strong></span>
-        <select name="location" required>
-          <option value="" disabled {% if not game.get('location') %}selected{% endif %}>Выберите место</option>
-          {% for location in location_options %}
-            <option value="{{ location }}" {% if game.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
-          {% endfor %}
-        </select>
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label>
+              {{ game.get('location', '') or 'Выберите место' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              {% for location in location_options %}
+                <label class="dropdown-option">
+                  <input type="radio" name="location" value="{{ location }}" {% if game.get('location', '') == location %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ location }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
       <label>
@@ -172,6 +198,62 @@
 
         options.forEach(function (option) {
           option.addEventListener("change", updateLabel);
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!dropdown.contains(event.target)) {
+            closeDropdown();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeDropdown();
+          }
+        });
+
+        updateLabel();
+      });
+
+      document.querySelectorAll("[data-dropdown-single]").forEach(function (dropdown) {
+        const trigger = dropdown.querySelector("[data-dropdown-trigger]");
+        const panel = dropdown.querySelector("[data-dropdown-panel]");
+        const label = dropdown.querySelector("[data-dropdown-label]");
+        const options = Array.from(dropdown.querySelectorAll("[data-dropdown-single-option]"));
+        if (!trigger || !panel || !label || !options.length) return;
+
+        const closeDropdown = function () {
+          dropdown.classList.remove("is-open");
+          trigger.setAttribute("aria-expanded", "false");
+          panel.hidden = true;
+        };
+
+        const openDropdown = function () {
+          dropdown.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+          panel.hidden = false;
+        };
+
+        const updateLabel = function () {
+          const selected = options.find(function (option) { return option.checked; });
+          label.textContent = selected ? selected.value : label.dataset.placeholder || "Выберите значение";
+        };
+
+        label.dataset.placeholder = label.textContent.trim();
+
+        trigger.addEventListener("click", function () {
+          if (dropdown.classList.contains("is-open")) {
+            closeDropdown();
+          } else {
+            openDropdown();
+          }
+        });
+
+        options.forEach(function (option) {
+          option.addEventListener("change", function () {
+            updateLabel();
+            closeDropdown();
+          });
         });
 
         document.addEventListener("click", function (event) {
