@@ -339,7 +339,7 @@ button,
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  transition: box-shadow 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
 }
 
 button,
@@ -363,8 +363,9 @@ button:hover,
 .hero-action:hover,
 .button-secondary:hover,
 .button-danger:hover {
-  transform: translateY(-1px);
   opacity: 0.92;
+  filter: brightness(1.02);
+  box-shadow: 0 8px 18px rgba(31, 26, 23, 0.12);
 }
 
 .panel {
