@@ -23,11 +23,29 @@
       <fieldset class="form-field">
         <legend>Тип <strong class="required-mark">*</strong></legend>
         {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
-        <select class="multi-select-field" name="game_type" multiple size="{{ [game_types|length, 8]|min }}" required>
-          {% for game_type in game_types %}
-            <option value="{{ game_type }}" {% if game_type in selected_types %}selected{% endif %}>{{ game_type }}</option>
-          {% endfor %}
-        </select>
+        <div class="dropdown-multiselect" data-dropdown-multiselect>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label>
+              {% if selected_types %}
+                {{ selected_types|join(', ') }}
+              {% else %}
+                Выберите типы
+              {% endif %}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              {% for game_type in game_types %}
+                <label class="dropdown-option">
+                  <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %} data-dropdown-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ game_type }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </fieldset>
 
       <label>
@@ -116,6 +134,59 @@
 {% block scripts %}
   <script>
     (function () {
+      document.querySelectorAll("[data-dropdown-multiselect]").forEach(function (dropdown) {
+        const trigger = dropdown.querySelector("[data-dropdown-trigger]");
+        const panel = dropdown.querySelector("[data-dropdown-panel]");
+        const label = dropdown.querySelector("[data-dropdown-label]");
+        const options = Array.from(dropdown.querySelectorAll("[data-dropdown-option]"));
+        if (!trigger || !panel || !label || !options.length) return;
+
+        const closeDropdown = function () {
+          dropdown.classList.remove("is-open");
+          trigger.setAttribute("aria-expanded", "false");
+          panel.hidden = true;
+        };
+
+        const openDropdown = function () {
+          dropdown.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+          panel.hidden = false;
+        };
+
+        const updateLabel = function () {
+          const selected = options
+            .filter(function (option) { return option.checked; })
+            .map(function (option) { return option.value; });
+          label.textContent = selected.length ? selected.join(", ") : "Выберите типы";
+        };
+
+        trigger.addEventListener("click", function () {
+          if (dropdown.classList.contains("is-open")) {
+            closeDropdown();
+          } else {
+            openDropdown();
+          }
+        });
+
+        options.forEach(function (option) {
+          option.addEventListener("change", updateLabel);
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!dropdown.contains(event.target)) {
+            closeDropdown();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeDropdown();
+          }
+        });
+
+        updateLabel();
+      });
+
       const dropzone = document.getElementById("file-dropzone");
       const input = document.getElementById("game-files");
       const button = document.getElementById("file-picker-button");

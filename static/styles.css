@@ -531,6 +531,123 @@ small {
   width: 100%;
 }
 
+.dropdown-multiselect {
+  position: relative;
+}
+
+.dropdown-multiselect-trigger {
+  width: 100%;
+  justify-content: space-between;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel-strong);
+  color: var(--text);
+  box-shadow: none;
+}
+
+.dropdown-multiselect-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.dropdown-multiselect-arrow {
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease;
+  flex: 0 0 auto;
+}
+
+.dropdown-multiselect.is-open .dropdown-multiselect-arrow {
+  transform: rotate(-135deg);
+}
+
+.dropdown-multiselect-panel {
+  position: absolute;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+  padding: 0.6rem;
+}
+
+.dropdown-multiselect-list {
+  display: grid;
+  gap: 0.45rem;
+  max-height: 18rem;
+  overflow-y: auto;
+}
+
+.dropdown-option {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.8rem;
+  border-radius: 14px;
+  background: var(--panel-strong);
+  cursor: pointer;
+  min-width: 0;
+}
+
+.dropdown-option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dropdown-option-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.dropdown-option-mark::after {
+  content: "";
+  position: absolute;
+  left: 6px;
+  top: 2px;
+  width: 5px;
+  height: 10px;
+  border-right: 2px solid #fff;
+  border-bottom: 2px solid #fff;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.18s ease;
+}
+
+.dropdown-option input:checked + .dropdown-option-mark {
+  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
+  border-color: transparent;
+  box-shadow: 0 0 0 3px rgba(166, 61, 64, 0.12);
+}
+
+.dropdown-option input:checked + .dropdown-option-mark::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.dropdown-option input:focus-visible + .dropdown-option-mark {
+  outline: 2px solid rgba(166, 61, 64, 0.45);
+  outline-offset: 2px;
+}
+
+.dropdown-option-label {
+  min-width: 0;
+}
+
 .multi-checkbox-item {
   display: flex;
   align-items: center;
