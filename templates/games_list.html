@@ -260,6 +260,9 @@
             <p>Нет прикреплённых файлов.</p>
           {% endif %}
         </section>
+        <div class="card-actions">
+          <a class="button-secondary" href="{{ url_for('game_detail', game_id=game['id']) }}" target="_blank" rel="noopener">Открыть полностью</a>
+        </div>
       </article>
     {% else %}
       <div class="empty-state">

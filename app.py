@@ -953,6 +953,18 @@ def games_list():
     )
 
 
+@app.route("/games/<int:game_id>")
+def game_detail(game_id: int):
+    init_db()
+    game = get_game_or_404(game_id)
+    return render_template(
+        "game_detail.html",
+        game=game,
+        parse_files_json=parse_files_json,
+        parse_multi_categories=parse_multi_categories,
+    )
+
+
 @app.route("/my-games")
 @game_editor_required
 def my_games():

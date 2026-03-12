@@ -54,6 +54,7 @@
           {% endif %}
         </section>
         <div class="card-actions">
+          <a class="button-secondary" href="{{ url_for('game_detail', game_id=game['id']) }}" target="_blank" rel="noopener">Открыть полностью</a>
           <a class="button-secondary" href="{{ url_for('edit_game', game_id=game['id'], return_to=url_for('my_games')) }}">Редактировать</a>
         </div>
       </article>
