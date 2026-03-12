@@ -15,31 +15,72 @@
   <section class="panel">
     <nav class="admin-tabs">
       <a class="{% if active_tab == 'games' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='games') }}">База игр</a>
-      <a class="{% if active_tab == 'categories' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='categories') }}">Категории</a>
+      <a class="{% if active_tab == 'properties' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='game-types') }}">Свойства</a>
     </nav>
 
-    {% if active_tab == 'categories' %}
-      <h2>Категории игр</h2>
-      <form method="post" action="{{ url_for('add_category') }}" class="category-form">
-        <input type="text" name="name" placeholder="Новая категория" required>
-        <button type="submit">Добавить категорию</button>
-      </form>
+    {% if active_tab == 'properties' %}
+      <nav class="admin-subtabs">
+        <a class="{% if property_tab == 'game-types' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='game-types') }}">Категории игр</a>
+        <a class="{% if property_tab == 'age-categories' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='age-categories') }}">Возрастные категории</a>
+      </nav>
 
-      <div class="category-list">
-        {% for game_type in game_types %}
-          <div class="category-item">
-            <form method="post" action="{{ url_for('edit_category', type_id=game_type['id']) }}">
-              <input type="text" name="name" value="{{ game_type['name'] }}" required>
-              <button type="submit">Сохранить</button>
-            </form>
-            <form method="post" action="{{ url_for('delete_category', type_id=game_type['id']) }}" onsubmit="return confirm('Удалить категорию?');">
-              <button type="submit" class="button-danger">Удалить</button>
-            </form>
+      {% if property_tab == 'game-types' %}
+        <h2>Категории игр</h2>
+        <form method="post" action="{{ url_for('save_game_types') }}" class="property-bulk-form">
+          <div class="category-list">
+            {% for game_type in game_types %}
+              <div class="category-item">
+                <input type="hidden" name="item_id" value="{{ game_type['id'] }}">
+                <input type="text" name="item_name" value="{{ game_type['name'] }}" required>
+                <label class="property-toggle">
+                  <input type="checkbox" name="delete_item" value="{{ game_type['id'] }}">
+                  <span class="toggle-control" aria-hidden="true"></span>
+                  <span>Удалить</span>
+                </label>
+              </div>
+            {% else %}
+              <p class="empty-row">Категории пока не добавлены.</p>
+            {% endfor %}
           </div>
-        {% else %}
-          <p class="empty-row">Категории пока не добавлены.</p>
-        {% endfor %}
-      </div>
+
+          <label class="full-width">
+            <span>Новые категории</span>
+            <textarea name="new_items" rows="4" placeholder="По одной категории на строку"></textarea>
+          </label>
+
+          <div class="actions">
+            <button type="submit">Сохранить</button>
+          </div>
+        </form>
+      {% else %}
+        <h2>Возрастные категории</h2>
+        <form method="post" action="{{ url_for('save_age_categories') }}" class="property-bulk-form">
+          <div class="category-list">
+            {% for age_category in age_categories %}
+              <div class="category-item">
+                <input type="hidden" name="item_id" value="{{ age_category['id'] }}">
+                <input type="text" name="item_name" value="{{ age_category['name'] }}" required>
+                <label class="property-toggle">
+                  <input type="checkbox" name="delete_item" value="{{ age_category['id'] }}">
+                  <span class="toggle-control" aria-hidden="true"></span>
+                  <span>Удалить</span>
+                </label>
+              </div>
+            {% else %}
+              <p class="empty-row">Возрастные категории пока не добавлены.</p>
+            {% endfor %}
+          </div>
+
+          <label class="full-width">
+            <span>Новые возрастные категории</span>
+            <textarea name="new_items" rows="4" placeholder="По одной возрастной категории на строку"></textarea>
+          </label>
+
+          <div class="actions">
+            <button type="submit">Сохранить</button>
+          </div>
+        </form>
+      {% endif %}
     {% else %}
       <div class="admin-table-wrapper">
         <table class="admin-table">

@@ -124,7 +124,11 @@
       <article class="card">
         <div class="card-header">
           <h2>{{ game['title'] }}</h2>
-          <span class="tag">{{ game['game_type'] }}</span>
+          <div class="tag-list">
+            {% for item in parse_multi_categories(game['game_type']) %}
+              <span class="tag">{{ item }}</span>
+            {% endfor %}
+          </div>
         </div>
         <dl class="details">
           <div><dt>Цель</dt><dd>{{ game['goal'] }}</dd></div>

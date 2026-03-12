@@ -19,7 +19,21 @@
   <body>
     <header class="site-header">
       <div class="container">
-        <a class="brand" href="{{ url_for('games_list') }}">База игр и упражнений</a>
+        <a class="brand" href="{{ url_for('games_list') }}">
+          <span>База игр и упражнений</span>
+          <span class="brand-badge" aria-label="YMCA">
+            <svg viewBox="0 0 100 86.6" role="img" aria-hidden="true">
+              <path d="M0 0H100L50 86.6Z"></path>
+            </svg>
+          </span>
+        </a>
+        <button class="menu-toggle" type="button" id="menu-toggle" aria-expanded="false" aria-controls="header-menu">
+          <span></span>
+          <span></span>
+          <span></span>
+          <span class="toggle-text">Меню</span>
+        </button>
+        <div class="header-menu" id="header-menu">
         <div class="header-tools">
           <button class="theme-toggle" type="button" id="theme-toggle" aria-pressed="false">
             <span class="theme-toggle-track" aria-hidden="true">
@@ -33,6 +47,7 @@
           <a href="{{ url_for('add_game') }}">Добавить игру</a>
           <a href="{{ url_for('admin_list') }}">Админ-панель</a>
         </nav>
+        </div>
       </div>
     </header>
 
@@ -52,6 +67,8 @@
       (function () {
         const root = document.documentElement;
         const toggle = document.getElementById("theme-toggle");
+        const menuToggle = document.getElementById("menu-toggle");
+        const headerMenu = document.getElementById("header-menu");
         if (!toggle) return;
         const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -88,6 +105,22 @@
             applyTheme(getPreferredTheme());
           }
         });
+
+        if (menuToggle && headerMenu) {
+          menuToggle.addEventListener("click", function () {
+            const isOpen = headerMenu.classList.toggle("is-open");
+            menuToggle.setAttribute("aria-expanded", String(isOpen));
+          });
+
+          headerMenu.querySelectorAll("a, button").forEach((element) => {
+            element.addEventListener("click", function () {
+              if (window.innerWidth <= 860) {
+                headerMenu.classList.remove("is-open");
+                menuToggle.setAttribute("aria-expanded", "false");
+              }
+            });
+          });
+        }
       })();
     </script>
     {% block scripts %}{% endblock %}

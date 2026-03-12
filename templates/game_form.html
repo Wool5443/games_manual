@@ -17,19 +17,22 @@
         <input type="text" name="title" value="{{ game.get('title', '') }}" required>
       </label>
 
-      <label>
-        <span>Тип <strong class="required-mark">*</strong></span>
-        <select name="game_type" required>
-          <option value="" disabled {% if not game.get('game_type') %}selected{% endif %}>Выберите тип</option>
+      <fieldset class="form-field">
+        <legend>Тип <strong class="required-mark">*</strong></legend>
+        {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
+        <div class="multi-checkbox-list">
           {% for game_type in game_types %}
-            <option value="{{ game_type }}" {% if game.get('game_type', '') == game_type %}selected{% endif %}>{{ game_type }}</option>
+            <label class="multi-checkbox-item">
+              <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %}>
+              <span>{{ game_type }}</span>
+            </label>
           {% endfor %}
-        </select>
-      </label>
+        </div>
+      </fieldset>
 
       <label>
         <span>Цель <strong class="required-mark">*</strong></span>
-        <textarea name="goal" rows="3" required>{{ game.get('goal', '') }}</textarea>
+        <input type="text" name="goal" value="{{ game.get('goal', '') }}" required>
       </label>
 
       <label>
@@ -64,7 +67,7 @@
 
       <label>
         <span>Необходимое оборудование</span>
-        <textarea name="equipment" rows="3" placeholder="Оставьте пустым, если оборудование не нужно">{{ game.get('equipment', '') }}</textarea>
+        <input type="text" name="equipment" value="{{ game.get('equipment', '') }}">
       </label>
 
       <label class="full-width">
@@ -119,29 +122,58 @@
       const fileList = document.getElementById("selected-files");
       if (!dropzone || !input || !button || !fileList) return;
 
+      let selectedFiles = [];
+
+      const syncInputFiles = () => {
+        const transfer = new DataTransfer();
+        selectedFiles.forEach((file) => transfer.items.add(file));
+        input.files = transfer.files;
+      };
+
       const renderFiles = () => {
-        const files = Array.from(input.files || []);
         fileList.innerHTML = "";
 
-        if (!files.length) {
+        if (!selectedFiles.length) {
           const item = document.createElement("li");
           item.textContent = "Файлы не выбраны";
           fileList.appendChild(item);
           return;
         }
 
-        files.forEach((file) => {
+        selectedFiles.forEach((file, index) => {
           const item = document.createElement("li");
-          item.textContent = file.name;
+          const name = document.createElement("span");
+          name.textContent = file.name;
+
+          const removeButton = document.createElement("button");
+          removeButton.type = "button";
+          removeButton.className = "selected-file-remove";
+          removeButton.textContent = "Убрать";
+          removeButton.addEventListener("click", function () {
+            selectedFiles = selectedFiles.filter((_, fileIndex) => fileIndex !== index);
+            syncInputFiles();
+            renderFiles();
+          });
+
+          item.appendChild(name);
+          item.appendChild(removeButton);
           fileList.appendChild(item);
         });
+      };
+
+      const mergeFiles = (incomingFiles) => {
+        selectedFiles = selectedFiles.concat(Array.from(incomingFiles || []));
+        syncInputFiles();
+        renderFiles();
       };
 
       button.addEventListener("click", function () {
         input.click();
       });
 
-      input.addEventListener("change", renderFiles);
+      input.addEventListener("change", function () {
+        mergeFiles(input.files);
+      });
 
       ["dragenter", "dragover"].forEach((eventName) => {
         dropzone.addEventListener(eventName, function (event) {
@@ -160,11 +192,7 @@
       dropzone.addEventListener("drop", function (event) {
         const files = event.dataTransfer ? event.dataTransfer.files : null;
         if (!files || !files.length) return;
-
-        const transfer = new DataTransfer();
-        Array.from(files).forEach((file) => transfer.items.add(file));
-        input.files = transfer.files;
-        renderFiles();
+        mergeFiles(files);
       });
     })();
   </script>
