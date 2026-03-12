@@ -543,6 +543,8 @@ small {
   display: flex;
   width: 100%;
   justify-content: space-between;
+  align-items: center;
+  min-height: calc(1.2em + 1.6rem + 2px);
   padding: 0.8rem 0.95rem;
   border: 1px solid rgba(70, 46, 24, 0.18);
   border-radius: 14px;
