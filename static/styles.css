@@ -339,7 +339,7 @@ button,
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
-  transition: box-shadow 0.15s ease, opacity 0.15s ease, filter 0.15s ease;
+  transition: opacity 0.15s ease, filter 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 button,
@@ -365,7 +365,6 @@ button:hover,
 .button-danger:hover {
   opacity: 0.92;
   filter: brightness(1.02);
-  box-shadow: 0 8px 18px rgba(31, 26, 23, 0.12);
 }
 
 .panel {
