@@ -503,38 +503,23 @@ small {
 }
 
 .tag-list {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-  justify-content: flex-end;
-  align-items: flex-start;
   width: fit-content;
   max-width: min(100%, 60%);
   min-width: 0;
   margin-left: auto;
   align-self: flex-start;
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+  font-weight: 700;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  text-align: right;
 }
 
 .card-header h2,
 .card h3 {
   margin: 0;
-}
-
-.tag {
-  display: inline-block;
-  padding: 0.35rem 0.7rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  font-size: 0.9rem;
-  font-weight: 700;
-  width: auto;
-  max-width: 100%;
-  min-width: 0;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: break-word;
-  text-align: right;
 }
 
 .details {
@@ -912,11 +897,12 @@ small {
   }
 
   .tag-list {
-    justify-content: flex-start;
     max-width: 100%;
     width: 100%;
     margin-left: 0;
+    text-align: left;
   }
+
 }
 
 @media (max-width: 860px) {
