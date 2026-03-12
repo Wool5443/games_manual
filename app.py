@@ -3,8 +3,10 @@ import os
 import secrets
 import sqlite3
 import tempfile
+from functools import wraps
 
-from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, url_for
+from authlib.integrations.flask_client import OAuth
+from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, session, url_for
 from werkzeug.utils import secure_filename
 
 
@@ -154,6 +156,21 @@ REQUIRED_TABLE_COLUMNS = {
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
 app.config["MAX_CONTENT_LENGTH"] = 512 * 1024 * 1024
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
+ADMIN_EMAILS = {email.strip().casefold() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()}
+GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+
+oauth = OAuth(app)
+if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
+    oauth.register(
+        name="google",
+        client_id=GOOGLE_CLIENT_ID,
+        client_secret=GOOGLE_CLIENT_SECRET,
+        server_metadata_url=GOOGLE_DISCOVERY_URL,
+        client_kwargs={"scope": "openid email profile"},
+    )
 
 
 def get_db() -> sqlite3.Connection:
@@ -383,6 +400,56 @@ def validate_import_database(path: Path) -> tuple[bool, str]:
     return True, ""
 
 
+def is_google_auth_enabled() -> bool:
+    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and ADMIN_EMAILS and oauth.create_client("google"))
+
+
+def get_current_user() -> dict[str, str] | None:
+    user = session.get("user")
+    return user if isinstance(user, dict) else None
+
+
+def is_admin_authenticated() -> bool:
+    user = get_current_user()
+    if not user:
+        return False
+
+    email = str(user.get("email", "")).strip().casefold()
+    if not email or not user.get("email_verified"):
+        return False
+    if ADMIN_EMAILS and email not in ADMIN_EMAILS:
+        return False
+    return True
+
+
+def safe_redirect_target(raw_target: str | None) -> str:
+    if not raw_target:
+        return url_for("admin_list")
+    if raw_target.startswith("/") and not raw_target.startswith("//"):
+        return raw_target
+    return url_for("admin_list")
+
+
+def admin_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if is_admin_authenticated():
+            return view_func(*args, **kwargs)
+
+        if not is_google_auth_enabled():
+            flash(
+                "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET и ADMIN_EMAILS.",
+                "error",
+            )
+            return redirect(url_for("games_list"))
+
+        session["auth_next"] = safe_redirect_target(request.full_path if request.query_string else request.path)
+        flash("Войдите через Google для доступа к административным разделам.", "warning")
+        return redirect(url_for("login_google"))
+
+    return wrapped_view
+
+
 def build_filters(args) -> tuple[str, list[str]]:
     clauses = []
     params: list[str] = []
@@ -498,6 +565,7 @@ def games_list():
 
 
 @app.route("/games/new", methods=("GET", "POST"))
+@admin_required
 def add_game():
     init_db()
     if request.method == "POST":
@@ -555,6 +623,7 @@ def add_game():
 
 
 @app.route("/admin")
+@admin_required
 def admin_list():
     init_db()
     active_tab = request.args.get("tab", "games")
@@ -576,7 +645,67 @@ def admin_list():
     )
 
 
+@app.get("/auth/google/login")
+def login_google():
+    if not is_google_auth_enabled():
+        flash(
+            "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET и ADMIN_EMAILS.",
+            "error",
+        )
+        return redirect(url_for("games_list"))
+
+    next_target = safe_redirect_target(request.args.get("next"))
+    if next_target:
+        session["auth_next"] = next_target
+
+    google = oauth.create_client("google")
+    redirect_uri = url_for("google_callback", _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.get("/auth/google/callback")
+def google_callback():
+    if not is_google_auth_enabled():
+        flash("Google авторизация не настроена.", "error")
+        return redirect(url_for("games_list"))
+
+    google = oauth.create_client("google")
+    token = google.authorize_access_token()
+    userinfo = token.get("userinfo")
+    if not userinfo:
+        userinfo = google.userinfo()
+
+    email = str(userinfo.get("email", "")).strip()
+    if not userinfo.get("email_verified") or not email:
+        session.pop("user", None)
+        flash("Google-аккаунт должен иметь подтверждённый email.", "error")
+        return redirect(url_for("games_list"))
+
+    if ADMIN_EMAILS and email.casefold() not in ADMIN_EMAILS:
+        session.pop("user", None)
+        flash("У этого аккаунта нет доступа к админ-панели.", "error")
+        return redirect(url_for("games_list"))
+
+    session["user"] = {
+        "email": email,
+        "name": str(userinfo.get("name", "")).strip() or email,
+        "picture": str(userinfo.get("picture", "")).strip(),
+        "email_verified": bool(userinfo.get("email_verified")),
+    }
+    flash("Вход через Google выполнен.", "success")
+    return redirect(session.pop("auth_next", url_for("admin_list")))
+
+
+@app.post("/auth/logout")
+def logout():
+    session.pop("user", None)
+    session.pop("auth_next", None)
+    flash("Вы вышли из аккаунта.", "success")
+    return redirect(url_for("games_list"))
+
+
 @app.get("/admin/export")
+@admin_required
 def export_database():
     init_db()
     if "db" in g:
@@ -595,6 +724,7 @@ def export_database():
 
 
 @app.post("/admin/import")
+@admin_required
 def import_database():
     uploaded_file = request.files.get("database_file")
     if not uploaded_file or not uploaded_file.filename:
@@ -633,6 +763,7 @@ def import_database():
 
 
 @app.route("/admin/<int:game_id>/edit", methods=("GET", "POST"))
+@admin_required
 def edit_game(game_id: int):
     init_db()
     game = get_game_or_404(game_id)
@@ -709,6 +840,7 @@ def edit_game(game_id: int):
 
 
 @app.post("/admin/<int:game_id>/delete")
+@admin_required
 def delete_game(game_id: int):
     init_db()
     game = get_game_or_404(game_id)
@@ -725,6 +857,7 @@ def delete_game(game_id: int):
 
 
 @app.post("/admin/categories")
+@admin_required
 def add_category():
     init_db()
     name = request.form.get("name", "").strip()
@@ -744,6 +877,7 @@ def add_category():
 
 
 @app.post("/admin/properties/game-types")
+@admin_required
 def save_game_types():
     init_db()
     success, message = apply_bulk_property_updates(
@@ -758,6 +892,7 @@ def save_game_types():
 
 
 @app.post("/admin/categories/<int:type_id>/edit")
+@admin_required
 def edit_category(type_id: int):
     init_db()
     new_name = request.form.get("name", "").strip()
@@ -782,6 +917,7 @@ def edit_category(type_id: int):
 
 
 @app.post("/admin/categories/<int:type_id>/delete")
+@admin_required
 def delete_category(type_id: int):
     init_db()
     db = get_db()
@@ -801,6 +937,7 @@ def delete_category(type_id: int):
 
 
 @app.post("/admin/age-categories")
+@admin_required
 def add_age_category():
     init_db()
     name = request.form.get("name", "").strip()
@@ -820,6 +957,7 @@ def add_age_category():
 
 
 @app.post("/admin/properties/age-categories")
+@admin_required
 def save_age_categories():
     init_db()
     success, message = apply_bulk_property_updates(
@@ -834,6 +972,7 @@ def save_age_categories():
 
 
 @app.post("/admin/age-categories/<int:age_id>/edit")
+@admin_required
 def edit_age_category(age_id: int):
     init_db()
     new_name = request.form.get("name", "").strip()
@@ -858,6 +997,7 @@ def edit_age_category(age_id: int):
 
 
 @app.post("/admin/age-categories/<int:age_id>/delete")
+@admin_required
 def delete_age_category(age_id: int):
     init_db()
     db = get_db()
@@ -883,7 +1023,13 @@ def uploaded_file(filename: str):
 
 @app.context_processor
 def inject_globals():
-    return {"sortable_fields": SORTABLE_FIELDS, "parse_multi_categories": parse_multi_categories}
+    return {
+        "sortable_fields": SORTABLE_FIELDS,
+        "parse_multi_categories": parse_multi_categories,
+        "current_user": get_current_user(),
+        "is_admin_authenticated": is_admin_authenticated(),
+        "google_auth_enabled": is_google_auth_enabled(),
+    }
 
 
 if __name__ == "__main__":

@@ -23,3 +23,21 @@ docker compose up -d --build
 ```
 
 Приложение будет доступно на порту, указанном в `.env` через переменную `PORT`.
+
+## Авторизация через Google
+
+Для входа в админ-панель укажите в `.env`:
+
+```bash
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+ADMIN_EMAILS=user1@example.com,user2@example.com
+```
+
+В настройках OAuth-клиента Google добавьте redirect URI:
+
+```text
+http://127.0.0.1:5000/auth/google/callback
+```
+
+Если приложение доступно на другом домене или порту, используйте этот адрес в redirect URI.

@@ -41,11 +41,25 @@
             </span>
             <span class="theme-toggle-label">Тёмная тема</span>
           </button>
+          {% if current_user %}
+            <div class="auth-controls">
+              <span class="auth-user">{{ current_user.get('name') or current_user.get('email') }}</span>
+              <form method="post" action="{{ url_for('logout') }}">
+                <button type="submit" class="button-secondary auth-button">Выйти</button>
+              </form>
+            </div>
+          {% elif google_auth_enabled %}
+            <a class="button-secondary auth-button" href="{{ url_for('login_google') }}">Войти через Google</a>
+          {% endif %}
         </div>
         <nav class="nav">
           <a href="{{ url_for('games_list') }}">Просмотр базы</a>
-          <a href="{{ url_for('add_game') }}">Добавить игру</a>
-          <a href="{{ url_for('admin_list') }}">Админ-панель</a>
+          {% if is_admin_authenticated %}
+            <a href="{{ url_for('add_game') }}">Добавить игру</a>
+            <a href="{{ url_for('admin_list') }}">Админ-панель</a>
+          {% elif google_auth_enabled %}
+            <a href="{{ url_for('login_google', next=url_for('admin_list')) }}">Вход для админа</a>
+          {% endif %}
         </nav>
         </div>
       </div>
