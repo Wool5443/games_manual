@@ -387,6 +387,11 @@ button:hover,
   gap: 1rem;
 }
 
+.filters-grid {
+  position: relative;
+  z-index: 5;
+}
+
 .filters-grid > *,
 .form-grid > * {
   min-width: 0;
@@ -590,6 +595,10 @@ small {
   position: relative;
   width: 100%;
   min-width: 0;
+}
+
+.dropdown-multiselect.is-open {
+  z-index: 80;
 }
 
 .dropdown-multiselect-trigger {
@@ -1506,7 +1515,7 @@ small {
 .toggle-control::after {
   content: "";
   position: absolute;
-  top: 2px;
+  top: 50%;
   left: 2px;
   width: 12px;
   height: 12px;
@@ -1514,6 +1523,7 @@ small {
   background: #fffdfb;
   box-shadow: 0 2px 10px rgba(31, 26, 23, 0.28);
   transition: transform 0.2s ease;
+  transform: translateY(-50%);
 }
 
 [data-theme="dark"] .toggle-control {
@@ -1533,7 +1543,7 @@ small {
 }
 
 .toggle-input:checked + .toggle-control::after {
-  transform: translateX(18px);
+  transform: translate(18px, -50%);
 }
 
 .toggle-input:focus-visible + .toggle-control {
