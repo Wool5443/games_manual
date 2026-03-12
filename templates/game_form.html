@@ -152,6 +152,14 @@
       <div class="actions full-width">
         <button type="submit">{% if is_edit %}Сохранить изменения{% else %}Добавить запись{% endif %}</button>
         <a class="button-secondary" href="{{ cancel_url or url_for('games_list') }}">Отмена</a>
+        {% if is_edit and delete_url %}
+          <form method="post" action="{{ delete_url }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
+            {% if return_to %}
+              <input type="hidden" name="return_to" value="{{ return_to }}">
+            {% endif %}
+            <button type="submit" class="button-danger">Удалить</button>
+          </form>
+        {% endif %}
       </div>
     </form>
   </section>

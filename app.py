@@ -1245,7 +1245,7 @@ def import_games_csv():
     return redirect(url_for("admin_list", tab="games"))
 
 
-def render_game_edit_form(game, current_files: list[str], return_to: str):
+def render_game_edit_form(game, current_files: list[str], return_to: str, delete_url: str | None = None):
     return render_template(
         "game_form.html",
         game=game,
@@ -1256,8 +1256,20 @@ def render_game_edit_form(game, current_files: list[str], return_to: str):
         existing_files=current_files,
         cancel_url=return_to,
         return_to=return_to,
+        delete_url=delete_url,
         parse_multi_categories=parse_multi_categories,
     )
+
+
+def delete_game_record(game: sqlite3.Row | dict) -> None:
+    for filename in parse_files_json(game["files_json"]):
+        target = UPLOAD_DIR / filename
+        if target.exists():
+            target.unlink()
+
+    db = get_db()
+    db.execute("DELETE FROM games WHERE id = ?", (game["id"],))
+    db.commit()
 
 
 def handle_game_edit(game_id: int, default_return: str):
@@ -1268,6 +1280,7 @@ def handle_game_edit(game_id: int, default_return: str):
         return redirect(url_for("my_games"))
 
     return_to = safe_redirect_target(request.values.get("return_to"), fallback=default_return)
+    delete_url = url_for("delete_game", game_id=game_id) if is_admin_authenticated() else url_for("delete_own_game", game_id=game_id)
 
     if request.method == "POST":
         data = extract_game_form_data(request.form)
@@ -1279,7 +1292,7 @@ def handle_game_edit(game_id: int, default_return: str):
                 flash(error, "error")
             draft_game = dict(data)
             draft_game["id"] = game_id
-            return render_game_edit_form(draft_game, current_files, return_to)
+            return render_game_edit_form(draft_game, current_files, return_to, delete_url)
 
         files_to_remove = set(request.form.getlist("delete_files"))
         remaining_files = [name for name in current_files if name not in files_to_remove]
@@ -1319,13 +1332,27 @@ def handle_game_edit(game_id: int, default_return: str):
 
     game_dict = dict(game)
     existing_files = parse_files_json(game["files_json"])
-    return render_game_edit_form(game_dict, existing_files, return_to)
+    return render_game_edit_form(game_dict, existing_files, return_to, delete_url)
 
 
 @app.route("/my-games/<int:game_id>/edit", methods=("GET", "POST"))
 @game_editor_required
 def edit_game(game_id: int):
     return handle_game_edit(game_id, url_for("my_games"))
+
+
+@app.post("/my-games/<int:game_id>/delete")
+@game_editor_required
+def delete_own_game(game_id: int):
+    init_db()
+    game = get_game_or_404(game_id)
+    if not can_edit_game(game):
+        flash("Вы можете удалять только игры, которые добавили сами.", "error")
+        return redirect(url_for("my_games"))
+
+    delete_game_record(game)
+    flash("Запись удалена.", "success")
+    return redirect(url_for("my_games"))
 
 
 @app.route("/admin/<int:game_id>/edit", methods=("GET", "POST"))
@@ -1339,14 +1366,7 @@ def admin_edit_game(game_id: int):
 def delete_game(game_id: int):
     init_db()
     game = get_game_or_404(game_id)
-    for filename in parse_files_json(game["files_json"]):
-        target = UPLOAD_DIR / filename
-        if target.exists():
-            target.unlink()
-
-    db = get_db()
-    db.execute("DELETE FROM games WHERE id = ?", (game_id,))
-    db.commit()
+    delete_game_record(game)
     flash("Запись удалена.", "success")
     return redirect(url_for("admin_list", tab="games"))
 
