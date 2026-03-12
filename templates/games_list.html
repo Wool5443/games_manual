@@ -121,7 +121,7 @@
 
   <section class="card-grid">
     {% for game in games %}
-      <article class="card">
+      <article class="card card-expandable" data-card-expandable tabindex="0" role="button" aria-label="Открыть карточку {{ game['title'] }}">
         <div class="card-header">
           <h2>{{ game['title'] }}</h2>
           <div class="tag-list">
@@ -163,4 +163,79 @@
       </div>
     {% endfor %}
   </section>
+
+  <div class="card-modal" id="card-modal" hidden>
+    <div class="card-modal-backdrop" data-card-modal-close></div>
+    <div class="card-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
+      <button class="card-modal-close" type="button" data-card-modal-close aria-label="Закрыть карточку">Закрыть</button>
+      <div class="card-modal-content" id="card-modal-content"></div>
+    </div>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      const modal = document.getElementById("card-modal");
+      const modalContent = document.getElementById("card-modal-content");
+      const cards = Array.from(document.querySelectorAll("[data-card-expandable]"));
+      if (!modal || !modalContent || !cards.length) return;
+
+      let activeCard = null;
+
+      const closeModal = function () {
+        modal.classList.remove("is-open");
+        document.body.classList.remove("modal-open");
+        window.setTimeout(function () {
+          modal.hidden = true;
+          modalContent.innerHTML = "";
+        }, 220);
+        if (activeCard) {
+          activeCard.focus();
+          activeCard = null;
+        }
+      };
+
+      const openModal = function (card) {
+        activeCard = card;
+        modalContent.innerHTML = "";
+        const clone = card.cloneNode(true);
+        clone.classList.remove("card-expandable");
+        clone.removeAttribute("data-card-expandable");
+        clone.removeAttribute("tabindex");
+        clone.removeAttribute("role");
+        clone.removeAttribute("aria-label");
+        clone.id = "card-modal-title";
+        modalContent.appendChild(clone);
+        modal.hidden = false;
+        document.body.classList.add("modal-open");
+        requestAnimationFrame(function () {
+          modal.classList.add("is-open");
+        });
+      };
+
+      cards.forEach(function (card) {
+        card.addEventListener("click", function (event) {
+          if (event.target.closest("a")) return;
+          openModal(card);
+        });
+        card.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            openModal(card);
+          }
+        });
+      });
+
+      modal.querySelectorAll("[data-card-modal-close]").forEach(function (element) {
+        element.addEventListener("click", closeModal);
+      });
+
+      document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !modal.hidden) {
+          closeModal();
+        }
+      });
+    })();
+  </script>
 {% endblock %}
