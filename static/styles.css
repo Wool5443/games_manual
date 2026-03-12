@@ -1186,7 +1186,7 @@ small {
   background: var(--accent-soft);
   color: var(--accent-dark);
   white-space: nowrap;
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition: opacity 0.15s ease, filter 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 .admin-tabs a.is-active {
@@ -1213,12 +1213,20 @@ small {
   color: var(--muted);
   border: 1px solid var(--line);
   white-space: nowrap;
-  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+  transition: opacity 0.15s ease, filter 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
 .admin-subtabs a.is-active {
   color: var(--accent-dark);
   background: var(--accent-soft);
+}
+
+.admin-tabs a:hover,
+.admin-tabs a:focus-visible,
+.admin-subtabs a:hover,
+.admin-subtabs a:focus-visible {
+  opacity: 0.92;
+  filter: brightness(1.02);
 }
 
 .category-form,
