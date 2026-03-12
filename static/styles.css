@@ -1406,7 +1406,7 @@ small {
 .property-toggle .toggle-control {
   --toggle-width: 34px;
   --toggle-height: 18px;
-  --toggle-gap: 2px;
+  --toggle-padding: 2px;
 }
 
 .compact-checkbox,
@@ -1481,33 +1481,34 @@ small {
   --toggle-track-width: 34px;
   --toggle-track-height: 16px;
   --toggle-border-width: 1px;
-  --toggle-gap: 1px;
+  --toggle-padding: 1px;
   --toggle-width: var(--toggle-track-width);
   --toggle-height: var(--toggle-track-height);
-  --toggle-thumb-offset: calc(var(--toggle-gap) + var(--toggle-border-width));
-  --toggle-knob-size: calc(var(--toggle-height) - (var(--toggle-thumb-offset) * 2));
-  --toggle-knob-travel: calc(var(--toggle-width) - var(--toggle-knob-size) - (var(--toggle-thumb-offset) * 2));
+  --toggle-thumb-size: calc(var(--toggle-height) - (var(--toggle-padding) * 2) - (var(--toggle-border-width) * 2));
+  --toggle-thumb-travel: calc(var(--toggle-width) - (var(--toggle-padding) * 2) - (var(--toggle-border-width) * 2) - var(--toggle-thumb-size));
   position: relative;
-  display: block;
+  display: inline-flex;
+  align-items: center;
   width: var(--toggle-width);
   height: var(--toggle-height);
+  padding: 0;
   border-radius: 999px;
   background: rgba(125, 8, 8, 0.4);
   border: var(--toggle-border-width) solid rgba(125, 8, 8, 0.34);
   transition: background 0.2s ease, box-shadow 0.2s ease;
   flex: 0 0 auto;
+  overflow: visible;
 }
 
-.toggle-control::after {
-  content: "";
+.toggle-thumb {
   position: absolute;
-  top: var(--toggle-thumb-offset);
-  left: var(--toggle-thumb-offset);
-  width: var(--toggle-knob-size);
-  height: var(--toggle-knob-size);
+  top: calc(50% - (var(--toggle-thumb-size) / 2));
+  left: var(--toggle-padding);
+  width: var(--toggle-thumb-size);
+  height: var(--toggle-thumb-size);
   border-radius: 50%;
   background: #fffdfb;
-  box-shadow: 0 2px 10px rgba(31, 26, 23, 0.28);
+  box-shadow: 0 1px 4px rgba(31, 26, 23, 0.2);
   transition: transform 0.2s ease;
   transform: translateX(0);
 }
@@ -1517,9 +1518,9 @@ small {
   border-color: rgba(240, 122, 122, 0.38);
 }
 
-[data-theme="dark"] .toggle-control::after {
+[data-theme="dark"] .toggle-thumb {
   background: #fff3f0;
-  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
 }
 
 .toggle-input:checked + .toggle-control,
@@ -1529,9 +1530,9 @@ small {
   box-shadow: 0 0 0 3px rgba(166, 61, 64, 0.18);
 }
 
-.toggle-input:checked + .toggle-control::after,
-.property-toggle input:checked + .toggle-control::after {
-  transform: translateX(var(--toggle-knob-travel));
+.toggle-input:checked + .toggle-control .toggle-thumb,
+.property-toggle input:checked + .toggle-control .toggle-thumb {
+  transform: translateX(var(--toggle-thumb-travel));
 }
 
 .toggle-input:focus-visible + .toggle-control,
