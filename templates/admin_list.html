@@ -100,7 +100,7 @@
       {% endif %}
     {% elif active_tab == 'access' %}
       <h2>Доступ</h2>
-      <p class="property-help">Администраторы получают полный доступ к базе. Пользователи с ролью «Добавление игр» могут только создавать новые записи.</p>
+      <p class="property-help">Администраторы получают полный доступ к базе. Пользователи с ролью «Добавление игр» могут только создавать новые записи. Ссылки-приглашения позволяют выдать доступ после входа через Google.</p>
       <form method="post" action="{{ url_for('save_access_users') }}" class="property-bulk-form">
         <div class="category-list">
           {% for access_user in access_users %}
@@ -154,6 +154,48 @@
           <button type="submit">Сохранить</button>
         </div>
       </form>
+
+      <section class="invite-panel">
+        <div class="invite-panel-header">
+          <div>
+            <h3>Ссылки-приглашения</h3>
+            <p class="property-help">Пользователь открывает ссылку, входит через Google и получает роль, привязанную к этой ссылке.</p>
+          </div>
+          <div class="invite-actions">
+            <form method="post" action="{{ url_for('create_invite_link') }}">
+              <input type="hidden" name="role" value="editor">
+              <button type="submit">Создать ссылку для добавления игр</button>
+            </form>
+            <form method="post" action="{{ url_for('create_invite_link') }}">
+              <input type="hidden" name="role" value="admin">
+              <button type="submit" class="button-secondary">Создать ссылку администратора</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="invite-list">
+          {% for invite in invite_links %}
+            <div class="invite-item">
+              <div class="invite-meta">
+                <strong>{{ access_role_labels.get(invite['role'], invite['role']) }}</strong>
+                <span>Создано: {{ invite['created_at'] }}</span>
+                {% if invite['created_by_email'] %}
+                  <span>Кем: {{ invite['created_by_email'] }}</span>
+                {% endif %}
+              </div>
+              <label class="invite-link-field">
+                <span>Ссылка</span>
+                <input type="text" value="{{ invite['url'] }}" readonly onclick="this.select();">
+              </label>
+              <form method="post" action="{{ url_for('delete_invite_link', invite_id=invite['id']) }}" onsubmit="return confirm('Отозвать эту ссылку-приглашение?');">
+                <button type="submit" class="button-danger">Отозвать</button>
+              </form>
+            </div>
+          {% else %}
+            <p class="empty-row">Ссылки-приглашения пока не созданы.</p>
+          {% endfor %}
+        </div>
+      </section>
     {% else %}
       <div class="admin-table-wrapper">
         <table class="admin-table">

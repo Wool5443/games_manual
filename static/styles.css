@@ -1299,6 +1299,74 @@ small {
   color: var(--muted);
 }
 
+.invite-panel {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.invite-panel-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.invite-panel-header h3 {
+  margin: 0 0 0.4rem;
+}
+
+.invite-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.invite-actions form {
+  margin: 0;
+}
+
+.invite-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.invite-item {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--panel-strong);
+}
+
+.invite-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  color: var(--muted);
+}
+
+.invite-meta strong {
+  color: var(--text);
+}
+
+.invite-link-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.invite-link-field input[readonly] {
+  cursor: text;
+}
+
+.invite-item form {
+  margin: 0;
+}
+
 .property-toggle {
   display: inline-flex;
   align-items: center;

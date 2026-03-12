@@ -145,6 +145,14 @@ CREATE TABLE IF NOT EXISTS access_users (
     role TEXT NOT NULL CHECK (role IN ('admin', 'editor')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS invite_links (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    token TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'editor')),
+    created_by_email TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
 """
 
 IMPORTABLE_DB_EXTENSIONS = {".db", ".sqlite", ".sqlite3"}
@@ -278,10 +286,28 @@ def fetch_access_rows() -> list[sqlite3.Row]:
     ).fetchall()
 
 
+def fetch_invite_rows() -> list[sqlite3.Row]:
+    init_db()
+    return get_db().execute(
+        """
+        SELECT id, token, role, created_by_email, created_at
+        FROM invite_links
+        ORDER BY created_at DESC, id DESC
+        """
+    ).fetchall()
+
+
 def versioned_static(filename: str) -> str:
     static_path = BASE_DIR / "static" / filename
     version = int(static_path.stat().st_mtime) if static_path.exists() else 0
     return url_for("static", filename=filename, v=version)
+
+
+def build_invite_url(token: str) -> str:
+    invite_path = url_for("accept_invite", token=token)
+    if PUBLIC_BASE_URL:
+        return f"{PUBLIC_BASE_URL}{invite_path}"
+    return url_for("accept_invite", token=token, _external=True)
 
 
 def normalize_email(value: str | None) -> str:
@@ -743,6 +769,44 @@ def get_user_role(email: str | None) -> str | None:
     return role if role in ACCESS_ROLE_LABELS else None
 
 
+def fetch_invite_row_by_token(token: str | None) -> sqlite3.Row | None:
+    if not token:
+        return None
+    init_db()
+    return get_db().execute(
+        "SELECT id, token, role, created_by_email, created_at FROM invite_links WHERE token = ?",
+        (str(token).strip(),),
+    ).fetchone()
+
+
+def upsert_access_user(email: str, role: str) -> None:
+    normalized_email = normalize_email(email)
+    if not normalized_email or role not in ACCESS_ROLE_LABELS:
+        return
+
+    db = get_db()
+    existing = db.execute("SELECT id FROM access_users WHERE email = ?", (normalized_email,)).fetchone()
+    if existing is None:
+        db.execute("INSERT INTO access_users (email, role) VALUES (?, ?)", (normalized_email, role))
+    else:
+        db.execute("UPDATE access_users SET role = ? WHERE email = ?", (role, normalized_email))
+    db.commit()
+
+
+def apply_invite_to_email(token: str | None, email: str) -> tuple[bool, str]:
+    invite = fetch_invite_row_by_token(token)
+    if invite is None:
+        return False, "Ссылка-приглашение недействительна или была отозвана."
+
+    role = invite["role"]
+    if role not in ACCESS_ROLE_LABELS:
+        return False, "В ссылке-приглашении указана неизвестная роль."
+
+    upsert_access_user(email, role)
+    role_label = ACCESS_ROLE_LABELS[role]
+    return True, f"Доступ «{role_label}» выдан для {normalize_email(email)}."
+
+
 def get_current_user_role() -> str | None:
     user = get_current_user()
     if not user:
@@ -1062,12 +1126,20 @@ def admin_list():
     if property_tab not in {"game-types", "age-categories"}:
         property_tab = "game-types"
     games = get_db().execute("SELECT * FROM games ORDER BY updated_at DESC, id DESC").fetchall()
+    invite_links = [
+        {
+            **dict(row),
+            "url": build_invite_url(row["token"]),
+        }
+        for row in fetch_invite_rows()
+    ]
     return render_template(
         "admin_list.html",
         games=games,
         game_types=fetch_game_type_rows(),
         age_categories=fetch_age_category_rows(),
         access_users=fetch_access_rows(),
+        invite_links=invite_links,
         access_role_labels=ACCESS_ROLE_LABELS,
         active_tab=active_tab,
         property_tab=property_tab,
@@ -1094,6 +1166,30 @@ def login_google():
     return google.authorize_redirect(redirect_uri)
 
 
+@app.get("/invite/<token>")
+def accept_invite(token: str):
+    invite = fetch_invite_row_by_token(token)
+    if invite is None:
+        flash("Ссылка-приглашение недействительна или была отозвана.", "error")
+        return redirect(url_for("games_list"))
+
+    target = url_for("admin_list") if invite["role"] == "admin" else url_for("add_game")
+    current_email = get_current_user_email()
+    if current_email:
+        success, message = apply_invite_to_email(token, current_email)
+        flash(message, "success" if success else "error")
+        return redirect(target if success else url_for("games_list"))
+
+    if not is_google_auth_enabled():
+        flash("Google авторизация не настроена. Ссылка-приглашение пока не может быть использована.", "error")
+        return redirect(url_for("games_list"))
+
+    session["pending_invite_token"] = token
+    session["auth_next"] = target
+    flash(f"Войдите через Google, чтобы получить доступ «{ACCESS_ROLE_LABELS[invite['role']]}».", "warning")
+    return redirect(url_for("login_google"))
+
+
 @app.get("/auth/google/callback")
 def google_callback():
     if not is_google_auth_enabled():
@@ -1111,6 +1207,11 @@ def google_callback():
         session.pop("user", None)
         flash("Google-аккаунт должен иметь подтверждённый email.", "error")
         return redirect(url_for("games_list"))
+
+    invite_token = session.pop("pending_invite_token", None)
+    if invite_token:
+        success, message = apply_invite_to_email(invite_token, email)
+        flash(message, "success" if success else "error")
 
     role = get_user_role(email)
     if role is None:
@@ -1132,6 +1233,7 @@ def google_callback():
 def logout():
     session.pop("user", None)
     session.pop("auth_next", None)
+    session.pop("pending_invite_token", None)
     flash("Вы вышли из аккаунта.", "success")
     return redirect(url_for("games_list"))
 
@@ -1504,6 +1606,39 @@ def save_access_users():
     init_db()
     success, message = apply_bulk_access_updates(request.form)
     flash(message, "success" if success else "error")
+    return redirect(url_for("admin_list", tab="access"))
+
+
+@app.post("/admin/invite-links")
+@admin_required
+def create_invite_link():
+    init_db()
+    role = request.form.get("role", "").strip()
+    if role not in ACCESS_ROLE_LABELS:
+        flash("Указана неизвестная роль для ссылки-приглашения.", "error")
+        return redirect(url_for("admin_list", tab="access"))
+
+    token = secrets.token_urlsafe(24)
+    get_db().execute(
+        "INSERT INTO invite_links (token, role, created_by_email) VALUES (?, ?, ?)",
+        (token, role, get_current_user_email()),
+    )
+    get_db().commit()
+    flash(f"Ссылка-приглашение для роли «{ACCESS_ROLE_LABELS[role]}» создана.", "success")
+    return redirect(url_for("admin_list", tab="access"))
+
+
+@app.post("/admin/invite-links/<int:invite_id>/delete")
+@admin_required
+def delete_invite_link(invite_id: int):
+    init_db()
+    row = get_db().execute("SELECT id FROM invite_links WHERE id = ?", (invite_id,)).fetchone()
+    if row is None:
+        abort(404)
+
+    get_db().execute("DELETE FROM invite_links WHERE id = ?", (invite_id,))
+    get_db().commit()
+    flash("Ссылка-приглашение отозвана.", "success")
     return redirect(url_for("admin_list", tab="access"))
 
 
