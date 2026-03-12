@@ -373,6 +373,7 @@
         modal.classList.remove("is-open");
         modal.classList.remove("is-preparing");
         modal.classList.remove("is-animating");
+        modal.classList.remove("is-finalizing");
         document.body.classList.remove("modal-open");
         cleanupGhost();
         if (activeCard) {
@@ -425,25 +426,29 @@
 
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
-            const targetRect = modalDialog.getBoundingClientRect();
+            const targetRect = clone.getBoundingClientRect();
             ghost.style.top = targetRect.top + "px";
             ghost.style.left = targetRect.left + "px";
             ghost.style.width = targetRect.width + "px";
             ghost.style.height = targetRect.height + "px";
             ghost.style.borderRadius = getComputedStyle(clone).borderRadius;
+            ghost.classList.add("is-expanding");
           });
         });
 
         cleanupTimer = window.setTimeout(function () {
           modal.classList.remove("is-preparing");
           modal.classList.remove("is-animating");
-          modal.classList.add("is-open");
+          modal.classList.add("is-open", "is-finalizing");
           cleanupGhost();
           if (activeCard) {
             activeCard.classList.remove("is-expanding");
           }
           isAnimating = false;
           cleanupTimer = null;
+          requestAnimationFrame(function () {
+            modal.classList.remove("is-finalizing");
+          });
         }, 340);
       };
 

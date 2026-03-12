@@ -812,6 +812,8 @@ small {
 .card-modal.is-preparing .card-modal-backdrop {
   opacity: 0;
   transition: none;
+  background: rgba(31, 26, 23, 0);
+  backdrop-filter: blur(0);
 }
 
 .card-modal.is-preparing .card-modal-dialog {
@@ -820,13 +822,18 @@ small {
   transition: none;
 }
 
+.card-modal.is-finalizing .card-modal-backdrop,
+.card-modal.is-finalizing .card-modal-dialog {
+  transition: none;
+}
+
 .card-modal-backdrop {
   position: absolute;
   inset: 0;
   background: rgba(31, 26, 23, 0.56);
-  backdrop-filter: blur(6px);
+  backdrop-filter: blur(0);
   opacity: 0;
-  transition: opacity 0.22s ease;
+  transition: opacity 0.32s ease, backdrop-filter 0.32s ease, background-color 0.32s ease;
 }
 
 .card-modal-dialog {
@@ -851,6 +858,14 @@ small {
 
 .card-modal.is-open .card-modal-backdrop {
   opacity: 1;
+  backdrop-filter: blur(6px);
+  background: rgba(31, 26, 23, 0.56);
+}
+
+.card-modal.is-animating .card-modal-backdrop {
+  opacity: 1;
+  backdrop-filter: blur(6px);
+  background: rgba(31, 26, 23, 0.56);
 }
 
 .card-modal.is-open .card-modal-dialog {
@@ -883,6 +898,10 @@ small {
     border-radius 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.18s ease;
+}
+
+.card-modal-ghost.is-expanding {
+  box-shadow: 0 32px 80px rgba(16, 11, 9, 0.3);
 }
 
 .card-modal-close {
