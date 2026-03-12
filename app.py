@@ -228,6 +228,12 @@ def fetch_age_category_rows() -> list[sqlite3.Row]:
     return get_db().execute("SELECT id, name FROM age_categories ORDER BY id ASC").fetchall()
 
 
+def versioned_static(filename: str) -> str:
+    static_path = BASE_DIR / "static" / filename
+    version = int(static_path.stat().st_mtime) if static_path.exists() else 0
+    return url_for("static", filename=filename, v=version)
+
+
 def parse_multi_categories(value: str | None) -> list[str]:
     if not value:
         return []
@@ -1040,6 +1046,7 @@ def inject_globals():
         "current_user": get_current_user(),
         "is_admin_authenticated": is_admin_authenticated(),
         "google_auth_enabled": is_google_auth_enabled(),
+        "versioned_static": versioned_static,
     }
 
 
