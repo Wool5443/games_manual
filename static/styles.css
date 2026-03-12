@@ -1404,33 +1404,9 @@ small {
 }
 
 .property-toggle .toggle-control {
-  width: 34px;
-  height: 18px;
-}
-
-.property-toggle .toggle-control::after {
-  width: 12px;
-  height: 12px;
-  top: 2px;
-  left: 2px;
-}
-
-.property-toggle input:checked + .toggle-control {
-  background: linear-gradient(135deg, var(--accent), var(--accent-dark));
-  box-shadow: 0 0 0 3px rgba(166, 61, 64, 0.12);
-}
-
-.property-toggle input:checked + .toggle-control::after {
-  transform: translateX(16px);
-}
-
-.property-toggle input:focus-visible + .toggle-control {
-  outline: 2px solid rgba(166, 61, 64, 0.45);
-  outline-offset: 2px;
-}
-
-[data-theme="dark"] .property-toggle input:checked + .toggle-control {
-  box-shadow: 0 0 0 3px rgba(240, 122, 122, 0.16);
+  --toggle-width: 34px;
+  --toggle-height: 18px;
+  --toggle-gap: 2px;
 }
 
 .compact-checkbox,
@@ -1505,11 +1481,16 @@ small {
   --toggle-track-width: 34px;
   --toggle-track-height: 16px;
   --toggle-border-width: 1px;
-  --toggle-knob-size: calc(var(--toggle-track-height) - (var(--toggle-border-width) * 2));
-  --toggle-knob-travel: calc(var(--toggle-track-width) - var(--toggle-knob-size) - (var(--toggle-border-width) * 2));
+  --toggle-gap: 1px;
+  --toggle-width: var(--toggle-track-width);
+  --toggle-height: var(--toggle-track-height);
+  --toggle-thumb-offset: calc(var(--toggle-gap) + var(--toggle-border-width));
+  --toggle-knob-size: calc(var(--toggle-height) - (var(--toggle-thumb-offset) * 2));
+  --toggle-knob-travel: calc(var(--toggle-width) - var(--toggle-knob-size) - (var(--toggle-thumb-offset) * 2));
   position: relative;
-  width: var(--toggle-track-width);
-  height: var(--toggle-track-height);
+  display: block;
+  width: var(--toggle-width);
+  height: var(--toggle-height);
   border-radius: 999px;
   background: rgba(125, 8, 8, 0.4);
   border: var(--toggle-border-width) solid rgba(125, 8, 8, 0.34);
@@ -1520,15 +1501,15 @@ small {
 .toggle-control::after {
   content: "";
   position: absolute;
-  top: 50%;
-  left: var(--toggle-border-width);
+  top: var(--toggle-thumb-offset);
+  left: var(--toggle-thumb-offset);
   width: var(--toggle-knob-size);
   height: var(--toggle-knob-size);
   border-radius: 50%;
   background: #fffdfb;
   box-shadow: 0 2px 10px rgba(31, 26, 23, 0.28);
   transition: transform 0.2s ease;
-  transform: translateY(-50%);
+  transform: translateX(0);
 }
 
 [data-theme="dark"] .toggle-control {
@@ -1541,19 +1522,26 @@ small {
   box-shadow: 0 1px 8px rgba(0, 0, 0, 0.45);
 }
 
-.toggle-input:checked + .toggle-control {
+.toggle-input:checked + .toggle-control,
+.property-toggle input:checked + .toggle-control {
   background: linear-gradient(135deg, var(--accent), var(--accent-dark));
   border-color: rgba(87, 5, 5, 0.5);
   box-shadow: 0 0 0 3px rgba(166, 61, 64, 0.18);
 }
 
-.toggle-input:checked + .toggle-control::after {
-  transform: translate(var(--toggle-knob-travel), -50%);
+.toggle-input:checked + .toggle-control::after,
+.property-toggle input:checked + .toggle-control::after {
+  transform: translateX(var(--toggle-knob-travel));
 }
 
-.toggle-input:focus-visible + .toggle-control {
+.toggle-input:focus-visible + .toggle-control,
+.property-toggle input:focus-visible + .toggle-control {
   outline: 2px solid rgba(166, 61, 64, 0.45);
   outline-offset: 2px;
+}
+
+[data-theme="dark"] .property-toggle input:checked + .toggle-control {
+  box-shadow: 0 0 0 3px rgba(240, 122, 122, 0.16);
 }
 
 .toggle-text {
