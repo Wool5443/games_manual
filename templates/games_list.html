@@ -125,22 +125,21 @@
         </div>
       </label>
 
-      <label class="equipment-filter">
-        <span class="equipment-filter-header">
+      <div class="equipment-filter">
+        <div class="equipment-filter-header">
           <span>Оборудование</span>
-          <span class="equipment-toggle-inline">
-            <span class="toggle-caption">Нет</span>
-            <label class="toggle-field" title="Нет">
-              <input class="toggle-input" type="checkbox" name="no_equipment" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
-              <span class="toggle-control" aria-hidden="true"><span class="toggle-thumb"></span></span>
-              <span class="toggle-text">Нет</span>
-            </label>
-          </span>
-        </span>
+          <label class="toggle-field" title="Нет">
+            <input class="toggle-input" type="checkbox" name="no_equipment" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
+            <span class="toggle-slider" aria-hidden="true">
+              <span class="toggle-thumb"></span>
+            </span>
+            <span class="toggle-text">Нет</span>
+          </label>
+        </div>
         <div class="equipment-filter-control">
           <input type="text" name="equipment" value="{{ filters.get('equipment', '') }}">
         </div>
-      </label>
+      </div>
 
       <label>
         <span>Правила</span>

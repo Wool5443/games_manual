@@ -50,9 +50,11 @@
                 <input type="hidden" name="item_id" value="{{ game_type['id'] }}">
                 <input type="text" name="item_name" value="{{ game_type['name'] }}" required>
                 <label class="property-toggle">
-                  <input type="checkbox" name="delete_item" value="{{ game_type['id'] }}">
-                  <span class="toggle-control" aria-hidden="true"><span class="toggle-thumb"></span></span>
-                  <span>Удалить</span>
+                  <input class="toggle-input" type="checkbox" name="delete_item" value="{{ game_type['id'] }}">
+                  <span class="toggle-slider" aria-hidden="true">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                  <span class="toggle-text">Удалить</span>
                 </label>
               </div>
             {% else %}
@@ -78,9 +80,11 @@
                 <input type="hidden" name="item_id" value="{{ age_category['id'] }}">
                 <input type="text" name="item_name" value="{{ age_category['name'] }}" required>
                 <label class="property-toggle">
-                  <input type="checkbox" name="delete_item" value="{{ age_category['id'] }}">
-                  <span class="toggle-control" aria-hidden="true"><span class="toggle-thumb"></span></span>
-                  <span>Удалить</span>
+                  <input class="toggle-input" type="checkbox" name="delete_item" value="{{ age_category['id'] }}">
+                  <span class="toggle-slider" aria-hidden="true">
+                    <span class="toggle-thumb"></span>
+                  </span>
+                  <span class="toggle-text">Удалить</span>
                 </label>
               </div>
             {% else %}
@@ -130,9 +134,11 @@
                 </div>
               </div>
               <label class="property-toggle">
-                <input type="checkbox" name="delete_item" value="{{ access_user['id'] }}">
-                <span class="toggle-control" aria-hidden="true"><span class="toggle-thumb"></span></span>
-                <span>Удалить</span>
+                <input class="toggle-input" type="checkbox" name="delete_item" value="{{ access_user['id'] }}">
+                <span class="toggle-slider" aria-hidden="true">
+                  <span class="toggle-thumb"></span>
+                </span>
+                <span class="toggle-text">Удалить</span>
               </label>
             </div>
           {% else %}
