@@ -5,6 +5,7 @@ import sqlite3
 import tempfile
 import csv
 import io
+from datetime import datetime
 from functools import wraps
 
 from authlib.integrations.flask_client import OAuth
@@ -60,6 +61,10 @@ ACCESS_ROLE_LABELS = {
     "admin": "Администратор",
     "editor": "Добавление игр",
 }
+ADMIN_GAMES_ORDER_OPTIONS = {
+    "desc": "Сначала новые",
+    "asc": "Сначала старые",
+}
 
 ALLOWED_EXTENSIONS = {
     "txt",
@@ -86,6 +91,7 @@ ALLOWED_EXTENSIONS = {
 
 SORTABLE_FIELDS = {
     "title": "Название",
+    "created_at": "Дата добавления",
     "game_type": "Тип",
     "goal": "Цель",
     "participants": "Количество участников",
@@ -312,6 +318,23 @@ def build_invite_url(token: str) -> str:
 
 def normalize_email(value: str | None) -> str:
     return str(value or "").strip().casefold()
+
+
+def format_datetime(value: str | None) -> str:
+    raw_value = str(value or "").strip()
+    if not raw_value:
+        return "Не указано"
+
+    normalized_value = raw_value.replace("Z", "+00:00")
+    try:
+        parsed_value = datetime.fromisoformat(normalized_value)
+    except ValueError:
+        try:
+            parsed_value = datetime.strptime(raw_value, "%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return raw_value
+
+    return parsed_value.strftime("%d.%m.%Y %H:%M")
 
 
 def parse_multi_categories(value: str | None) -> list[str]:
@@ -951,6 +974,13 @@ def get_sorting(args) -> tuple[str, str]:
     return sort, order
 
 
+def get_admin_games_order(args) -> str:
+    order = args.get("games_order", "desc").lower()
+    if order not in ADMIN_GAMES_ORDER_OPTIONS:
+        order = "desc"
+    return order
+
+
 def get_game_or_404(game_id: int) -> sqlite3.Row:
     game = get_db().execute("SELECT * FROM games WHERE id = ?", (game_id,)).fetchone()
     if game is None:
@@ -1125,7 +1155,11 @@ def admin_list():
     property_tab = request.args.get("property_tab", "game-types")
     if property_tab not in {"game-types", "age-categories"}:
         property_tab = "game-types"
-    games = get_db().execute("SELECT * FROM games ORDER BY updated_at DESC, id DESC").fetchall()
+    games_order = get_admin_games_order(request.args)
+    tie_breaker = "DESC" if games_order == "desc" else "ASC"
+    games = get_db().execute(
+        f"SELECT * FROM games ORDER BY created_at {games_order.upper()}, id {tie_breaker}"
+    ).fetchall()
     invite_links = [
         {
             **dict(row),
@@ -1143,6 +1177,8 @@ def admin_list():
         access_role_labels=ACCESS_ROLE_LABELS,
         active_tab=active_tab,
         property_tab=property_tab,
+        games_order=games_order,
+        admin_games_order_options=ADMIN_GAMES_ORDER_OPTIONS,
         parse_files_json=parse_files_json,
         parse_multi_categories=parse_multi_categories,
     )
@@ -1696,7 +1732,9 @@ def uploaded_file(filename: str):
 def inject_globals():
     return {
         "sortable_fields": SORTABLE_FIELDS,
+        "admin_games_order_options": ADMIN_GAMES_ORDER_OPTIONS,
         "parse_multi_categories": parse_multi_categories,
+        "format_datetime": format_datetime,
         "current_user": get_current_user(),
         "current_user_email": get_current_user_email(),
         "current_user_role": get_current_user_role(),

@@ -1151,6 +1151,18 @@ small {
   overflow-x: auto;
 }
 
+.admin-games-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.9rem;
+  margin-bottom: 1rem;
+}
+
+.admin-games-sort-field {
+  min-width: min(100%, 18rem);
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

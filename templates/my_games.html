@@ -33,6 +33,7 @@
           <div><dt>Участники</dt><dd>{{ game['participants'] }}</dd></div>
           <div><dt>Возраст</dt><dd>{{ game['age_category'] }}</dd></div>
           <div><dt>Длительность</dt><dd>{{ game['duration'] }}</dd></div>
+          <div><dt>Добавлено</dt><dd>{{ format_datetime(game['created_at']) }}</dd></div>
           <div><dt>Место</dt><dd>{{ game['location'] }}</dd></div>
           <div><dt>Оборудование</dt><dd>{{ game['equipment'] or 'Оборудование не требуется' }}</dd></div>
         </dl>

@@ -197,6 +197,37 @@
         </div>
       </section>
     {% else %}
+      <form method="get" class="admin-games-toolbar">
+        <input type="hidden" name="tab" value="games">
+        <label class="dropdown-field admin-games-sort-field">
+          <span>Дата добавления</span>
+          <input type="hidden" name="games_order" value="{{ games_order }}">
+          <div class="dropdown-multiselect" data-dropdown-single>
+            <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+              <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите порядок">
+                {{ admin_games_order_options.get(games_order, 'Выберите порядок') }}
+              </span>
+              <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+            </button>
+            <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+              <div class="dropdown-multiselect-list">
+                {% for order_key, order_label in admin_games_order_options.items() %}
+                  <label class="dropdown-option">
+                    <input type="radio" name="games_order_choice" value="{{ order_key }}" {% if games_order == order_key %}checked{% endif %} data-dropdown-single-option>
+                    <span class="dropdown-option-mark" aria-hidden="true"></span>
+                    <span class="dropdown-option-label">{{ order_label }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        </label>
+
+        <div class="actions">
+          <button type="submit">Применить</button>
+        </div>
+      </form>
+
       <div class="admin-table-wrapper">
         <table class="admin-table">
           <thead>
@@ -206,6 +237,7 @@
               <th>Участники</th>
               <th>Возраст</th>
               <th>Длительность</th>
+              <th>Добавлено</th>
               <th>Файлы</th>
               <th>Действия</th>
             </tr>
@@ -218,6 +250,7 @@
                 <td>{{ game['participants'] }}</td>
                 <td>{{ game['age_category'] }}</td>
                 <td>{{ game['duration'] }}</td>
+                <td>{{ format_datetime(game['created_at']) }}</td>
                 <td>{{ parse_files_json(game['files_json'])|length }}</td>
                 <td>
                   <div class="table-actions">
@@ -230,7 +263,7 @@
               </tr>
             {% else %}
               <tr>
-                <td colspan="7" class="empty-row">База пока пуста.</td>
+                <td colspan="8" class="empty-row">База пока пуста.</td>
               </tr>
             {% endfor %}
           </tbody>
