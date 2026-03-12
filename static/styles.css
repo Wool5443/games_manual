@@ -1502,12 +1502,17 @@ small {
 }
 
 .toggle-control {
+  --toggle-track-width: 34px;
+  --toggle-track-height: 16px;
+  --toggle-border-width: 1px;
+  --toggle-knob-size: calc(var(--toggle-track-height) - (var(--toggle-border-width) * 2));
+  --toggle-knob-travel: calc(var(--toggle-track-width) - var(--toggle-knob-size) - (var(--toggle-border-width) * 2));
   position: relative;
-  width: 34px;
-  height: 16px;
+  width: var(--toggle-track-width);
+  height: var(--toggle-track-height);
   border-radius: 999px;
   background: rgba(125, 8, 8, 0.4);
-  border: 1px solid rgba(125, 8, 8, 0.34);
+  border: var(--toggle-border-width) solid rgba(125, 8, 8, 0.34);
   transition: background 0.2s ease, box-shadow 0.2s ease;
   flex: 0 0 auto;
 }
@@ -1516,9 +1521,9 @@ small {
   content: "";
   position: absolute;
   top: 50%;
-  left: 2px;
-  width: 12px;
-  height: 12px;
+  left: var(--toggle-border-width);
+  width: var(--toggle-knob-size);
+  height: var(--toggle-knob-size);
   border-radius: 50%;
   background: #fffdfb;
   box-shadow: 0 2px 10px rgba(31, 26, 23, 0.28);
@@ -1543,7 +1548,7 @@ small {
 }
 
 .toggle-input:checked + .toggle-control::after {
-  transform: translate(18px, -50%);
+  transform: translate(var(--toggle-knob-travel), -50%);
 }
 
 .toggle-input:focus-visible + .toggle-control {
