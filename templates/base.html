@@ -1,18 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="ru" data-theme="dark">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Простофиля{% endblock %}</title>
-    <script>
-      (function () {
-        const savedTheme = localStorage.getItem("theme");
-        const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        if (savedTheme === "dark" || (!savedTheme && systemPrefersDark)) {
-          document.documentElement.dataset.theme = "dark";
-        }
-      })();
-    </script>
     <link rel="stylesheet" href="{{ versioned_static('palette.css') }}">
     <link rel="stylesheet" href="{{ versioned_static('styles.css') }}">
   </head>
@@ -45,12 +36,6 @@
             {% endif %}
           </nav>
           <div class="header-tools">
-            <button class="theme-toggle" type="button" id="theme-toggle" aria-pressed="false">
-              <span class="theme-toggle-track" aria-hidden="true">
-                <span class="theme-toggle-thumb"></span>
-              </span>
-              <span class="theme-toggle-label">Тёмная тема</span>
-            </button>
             {% if current_user %}
               <div class="auth-controls">
                 <span class="auth-user">{{ current_user.get('name') or current_user.get('email') }}</span>
@@ -80,47 +65,8 @@
     </main>
     <script>
       (function () {
-        const root = document.documentElement;
-        const toggle = document.getElementById("theme-toggle");
         const menuToggle = document.getElementById("menu-toggle");
         const headerMenu = document.getElementById("header-menu");
-        if (!toggle) return;
-        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-
-        const applyTheme = (theme) => {
-          if (theme === "dark") {
-            root.dataset.theme = "dark";
-            toggle.setAttribute("aria-pressed", "true");
-          } else {
-            delete root.dataset.theme;
-            toggle.setAttribute("aria-pressed", "false");
-          }
-        };
-
-        const getPreferredTheme = () => {
-          const savedTheme = localStorage.getItem("theme");
-          if (savedTheme) return savedTheme;
-          return mediaQuery.matches ? "dark" : "light";
-        };
-
-        applyTheme(getPreferredTheme());
-
-        toggle.addEventListener("click", function () {
-          const nextTheme = root.dataset.theme === "dark" ? "light" : "dark";
-          if (nextTheme === "dark") {
-            localStorage.setItem("theme", "dark");
-          } else {
-            localStorage.removeItem("theme");
-          }
-          applyTheme(nextTheme);
-        });
-
-        mediaQuery.addEventListener("change", function () {
-          if (!localStorage.getItem("theme")) {
-            applyTheme(getPreferredTheme());
-          }
-        });
-
         if (menuToggle && headerMenu) {
           menuToggle.addEventListener("click", function () {
             const isOpen = headerMenu.classList.toggle("is-open");
