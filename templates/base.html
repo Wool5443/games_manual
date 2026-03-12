@@ -49,7 +49,7 @@
               </form>
             </div>
           {% elif google_auth_enabled %}
-            <a class="button-secondary auth-button" href="{{ url_for('login_google') }}">Войти через Google</a>
+            <a class="button-secondary auth-button auth-google-button" href="{{ url_for('login_google') }}">Войти через Google</a>
           {% endif %}
         </div>
         <nav class="nav">
