@@ -402,6 +402,11 @@ textarea {
   font: inherit;
 }
 
+input,
+select {
+  min-height: calc(1.2em + 1.6rem + 2px);
+}
+
 [data-theme="dark"] input,
 [data-theme="dark"] select,
 [data-theme="dark"] textarea,
@@ -580,7 +585,12 @@ small {
   text-overflow: clip;
   white-space: nowrap;
   text-align: left;
-  scrollbar-width: thin;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.dropdown-multiselect-text::-webkit-scrollbar {
+  display: none;
 }
 
 .dropdown-multiselect-arrow {
