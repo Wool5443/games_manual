@@ -178,14 +178,27 @@
     (function () {
       const modal = document.getElementById("card-modal");
       const modalContent = document.getElementById("card-modal-content");
+      const modalDialog = modal ? modal.querySelector(".card-modal-dialog") : null;
       const cards = Array.from(document.querySelectorAll("[data-card-expandable]"));
-      if (!modal || !modalContent || !cards.length) return;
+      if (!modal || !modalContent || !modalDialog || !cards.length) return;
 
       let activeCard = null;
+      let activeGhost = null;
+      let isAnimating = false;
+
+      const cleanupGhost = function () {
+        if (activeGhost) {
+          activeGhost.remove();
+          activeGhost = null;
+        }
+      };
 
       const closeModal = function () {
+        if (isAnimating) return;
         modal.classList.remove("is-open");
+        modal.classList.remove("is-animating");
         document.body.classList.remove("modal-open");
+        cleanupGhost();
         window.setTimeout(function () {
           modal.hidden = true;
           modalContent.innerHTML = "";
@@ -197,6 +210,7 @@
       };
 
       const openModal = function (card) {
+        if (isAnimating || !modal.hidden) return;
         activeCard = card;
         modalContent.innerHTML = "";
         const clone = card.cloneNode(true);
@@ -207,11 +221,42 @@
         clone.removeAttribute("aria-label");
         clone.id = "card-modal-title";
         modalContent.appendChild(clone);
+
+        const sourceRect = card.getBoundingClientRect();
         modal.hidden = false;
         document.body.classList.add("modal-open");
+        modal.classList.add("is-open", "is-animating");
+
+        const ghost = card.cloneNode(true);
+        ghost.classList.remove("card-expandable");
+        ghost.removeAttribute("data-card-expandable");
+        ghost.removeAttribute("tabindex");
+        ghost.removeAttribute("role");
+        ghost.removeAttribute("aria-label");
+        ghost.classList.add("card-modal-ghost");
+        ghost.style.top = sourceRect.top + "px";
+        ghost.style.left = sourceRect.left + "px";
+        ghost.style.width = sourceRect.width + "px";
+        ghost.style.height = sourceRect.height + "px";
+        ghost.style.borderRadius = getComputedStyle(card).borderRadius;
+        document.body.appendChild(ghost);
+        activeGhost = ghost;
+        isAnimating = true;
+
         requestAnimationFrame(function () {
-          modal.classList.add("is-open");
+          const targetRect = modalDialog.getBoundingClientRect();
+          ghost.style.top = targetRect.top + "px";
+          ghost.style.left = targetRect.left + "px";
+          ghost.style.width = targetRect.width + "px";
+          ghost.style.height = targetRect.height + "px";
+          ghost.style.borderRadius = getComputedStyle(clone).borderRadius;
         });
+
+        window.setTimeout(function () {
+          modal.classList.remove("is-animating");
+          cleanupGhost();
+          isAnimating = false;
+        }, 340);
       };
 
       cards.forEach(function (card) {

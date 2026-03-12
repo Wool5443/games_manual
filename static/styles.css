@@ -785,6 +785,16 @@ small {
   align-items: center;
   justify-content: center;
   padding: 4vh 4vw;
+  pointer-events: none;
+}
+
+.card-modal[hidden] {
+  display: none;
+}
+
+.card-modal.is-open,
+.card-modal.is-animating {
+  pointer-events: auto;
 }
 
 .card-modal-backdrop {
@@ -810,6 +820,12 @@ small {
   transition: transform 0.24s ease, opacity 0.24s ease;
 }
 
+.card-modal.is-animating .card-modal-dialog {
+  opacity: 0;
+  transform: none;
+  transition: none;
+}
+
 .card-modal.is-open .card-modal-backdrop {
   opacity: 1;
 }
@@ -823,6 +839,21 @@ small {
   min-height: min(78vh, 54rem);
   box-shadow: none;
   border-radius: 24px;
+}
+
+.card-modal-ghost {
+  position: fixed;
+  margin: 0;
+  z-index: 121;
+  overflow: hidden;
+  pointer-events: none;
+  transition:
+    top 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    left 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    height 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    border-radius 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .card-modal-close {
