@@ -23,14 +23,11 @@
       <fieldset class="form-field">
         <legend>Тип <strong class="required-mark">*</strong></legend>
         {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
-        <div class="multi-checkbox-list">
+        <select class="multi-select-field" name="game_type" multiple size="{{ [game_types|length, 8]|min }}" required>
           {% for game_type in game_types %}
-            <label class="multi-checkbox-item">
-              <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %}>
-              <span>{{ game_type }}</span>
-            </label>
+            <option value="{{ game_type }}" {% if game_type in selected_types %}selected{% endif %}>{{ game_type }}</option>
           {% endfor %}
-        </div>
+        </select>
       </fieldset>
 
       <label>

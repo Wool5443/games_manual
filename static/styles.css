@@ -526,6 +526,11 @@ small {
   min-width: 0;
 }
 
+.multi-select-field {
+  min-height: 14rem;
+  width: 100%;
+}
+
 .multi-checkbox-item {
   display: flex;
   align-items: center;
