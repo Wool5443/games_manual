@@ -706,16 +706,20 @@ small {
   display: flex;
   gap: 0.75rem;
   margin-bottom: 1.2rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .admin-tabs a {
+  flex: 0 0 auto;
   padding: 0.75rem 1rem;
   border-radius: 999px;
   text-decoration: none;
   font-weight: 700;
   background: var(--accent-soft);
   color: var(--accent-dark);
+  white-space: nowrap;
 }
 
 .admin-tabs a.is-active {
@@ -727,10 +731,13 @@ small {
   display: flex;
   gap: 0.65rem;
   margin-bottom: 1.2rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .admin-subtabs a {
+  flex: 0 0 auto;
   padding: 0.55rem 0.9rem;
   border-radius: 999px;
   text-decoration: none;
@@ -738,6 +745,7 @@ small {
   background: var(--panel-strong);
   color: var(--muted);
   border: 1px solid var(--line);
+  white-space: nowrap;
 }
 
 .admin-subtabs a.is-active {

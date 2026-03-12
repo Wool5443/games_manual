@@ -12,10 +12,17 @@
     <div class="hero-admin-actions">
       <a class="hero-action" href="{{ url_for('add_game') }}">Добавить новую запись</a>
       <a class="button-secondary" href="{{ url_for('export_database') }}">Экспорт базы</a>
+      <a class="button-secondary" href="{{ url_for('export_games_csv') }}">Экспорт CSV</a>
       <form class="admin-import-form" method="post" action="{{ url_for('import_database') }}" enctype="multipart/form-data">
         <label class="admin-import-picker">
           <input type="file" name="database_file" accept=".db,.sqlite,.sqlite3" required>
           <span class="button-secondary">Импорт базы</span>
+        </label>
+      </form>
+      <form class="admin-import-form" method="post" action="{{ url_for('import_games_csv') }}" enctype="multipart/form-data">
+        <label class="admin-import-picker">
+          <input type="file" name="csv_file" accept=".csv" required>
+          <span class="button-secondary">Импорт CSV</span>
         </label>
       </form>
     </div>
@@ -25,13 +32,13 @@
     <nav class="admin-tabs">
       <a class="{% if active_tab == 'games' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='games') }}">База игр</a>
       <a class="{% if active_tab == 'properties' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='game-types') }}">Свойства</a>
+      <a class="{% if active_tab == 'access' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='access') }}">Доступ</a>
     </nav>
 
     {% if active_tab == 'properties' %}
       <nav class="admin-subtabs">
         <a class="{% if property_tab == 'game-types' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='game-types') }}">Категории игр</a>
         <a class="{% if property_tab == 'age-categories' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='age-categories') }}">Возрастные категории</a>
-        <a class="{% if property_tab == 'access-users' %}is-active{% endif %}" href="{{ url_for('admin_list', tab='properties', property_tab='access-users') }}">Доступ</a>
       </nav>
 
       {% if property_tab == 'game-types' %}
@@ -90,46 +97,46 @@
             <button type="submit">Сохранить</button>
           </div>
         </form>
-      {% else %}
-        <h2>Доступ</h2>
-        <p class="property-help">Администраторы получают полный доступ к базе. Пользователи с ролью «Добавление игр» могут только создавать новые записи.</p>
-        <form method="post" action="{{ url_for('save_access_users') }}" class="property-bulk-form">
-          <div class="category-list">
-            {% for access_user in access_users %}
-              <div class="category-item access-item">
-                <input type="hidden" name="item_id" value="{{ access_user['id'] }}">
-                <input type="email" name="item_email" value="{{ access_user['email'] }}" placeholder="email@example.com" required>
-                <select name="item_role" aria-label="Роль доступа">
-                  {% for role_key, role_label in access_role_labels.items() %}
-                    <option value="{{ role_key }}" {% if access_user['role'] == role_key %}selected{% endif %}>{{ role_label }}</option>
-                  {% endfor %}
-                </select>
-                <label class="property-toggle">
-                  <input type="checkbox" name="delete_item" value="{{ access_user['id'] }}">
-                  <span class="toggle-control" aria-hidden="true"></span>
-                  <span>Удалить</span>
-                </label>
-              </div>
-            {% else %}
-              <p class="empty-row">Пользователи с доступом пока не добавлены.</p>
-            {% endfor %}
-          </div>
-
-          <label class="full-width">
-            <span>Новые администраторы</span>
-            <textarea name="new_admins" rows="4" placeholder="По одному email на строку"></textarea>
-          </label>
-
-          <label class="full-width">
-            <span>Новые пользователи с правом добавления игр</span>
-            <textarea name="new_editors" rows="4" placeholder="По одному email на строку"></textarea>
-          </label>
-
-          <div class="actions">
-            <button type="submit">Сохранить</button>
-          </div>
-        </form>
       {% endif %}
+    {% elif active_tab == 'access' %}
+      <h2>Доступ</h2>
+      <p class="property-help">Администраторы получают полный доступ к базе. Пользователи с ролью «Добавление игр» могут только создавать новые записи.</p>
+      <form method="post" action="{{ url_for('save_access_users') }}" class="property-bulk-form">
+        <div class="category-list">
+          {% for access_user in access_users %}
+            <div class="category-item access-item">
+              <input type="hidden" name="item_id" value="{{ access_user['id'] }}">
+              <input type="email" name="item_email" value="{{ access_user['email'] }}" placeholder="email@example.com" required>
+              <select name="item_role" aria-label="Роль доступа">
+                {% for role_key, role_label in access_role_labels.items() %}
+                  <option value="{{ role_key }}" {% if access_user['role'] == role_key %}selected{% endif %}>{{ role_label }}</option>
+                {% endfor %}
+              </select>
+              <label class="property-toggle">
+                <input type="checkbox" name="delete_item" value="{{ access_user['id'] }}">
+                <span class="toggle-control" aria-hidden="true"></span>
+                <span>Удалить</span>
+              </label>
+            </div>
+          {% else %}
+            <p class="empty-row">Пользователи с доступом пока не добавлены.</p>
+          {% endfor %}
+        </div>
+
+        <label class="full-width">
+          <span>Новые администраторы</span>
+          <textarea name="new_admins" rows="4" placeholder="По одному email на строку"></textarea>
+        </label>
+
+        <label class="full-width">
+          <span>Новые пользователи с правом добавления игр</span>
+          <textarea name="new_editors" rows="4" placeholder="По одному email на строку"></textarea>
+        </label>
+
+        <div class="actions">
+          <button type="submit">Сохранить</button>
+        </div>
+      </form>
     {% else %}
       <div class="admin-table-wrapper">
         <table class="admin-table">
@@ -175,14 +182,15 @@
 {% block scripts %}
   <script>
     (function () {
-      const input = document.querySelector(".admin-import-picker input[type='file']");
-      const form = document.querySelector(".admin-import-form");
-      if (!input || !form) return;
+      document.querySelectorAll(".admin-import-form").forEach(function (form) {
+        const input = form.querySelector(".admin-import-picker input[type='file']");
+        if (!input) return;
 
-      input.addEventListener("change", function () {
-        if (input.files && input.files[0]) {
-          form.requestSubmit();
-        }
+        input.addEventListener("change", function () {
+          if (input.files && input.files[0]) {
+            form.requestSubmit();
+          }
+        });
       });
     })();
   </script>

@@ -3,10 +3,12 @@ import os
 import secrets
 import sqlite3
 import tempfile
+import csv
+import io
 from functools import wraps
 
 from authlib.integrations.flask_client import OAuth
-from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, session, url_for
+from flask import Flask, Response, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, session, url_for
 from werkzeug.utils import secure_filename
 from werkzeug.middleware.proxy_fix import ProxyFix
 
@@ -146,6 +148,22 @@ CREATE TABLE IF NOT EXISTS access_users (
 """
 
 IMPORTABLE_DB_EXTENSIONS = {".db", ".sqlite", ".sqlite3"}
+IMPORTABLE_CSV_EXTENSIONS = {".csv"}
+CSV_EXPORT_FIELDS = (
+    "id",
+    "title",
+    "game_type",
+    "goal",
+    "participants",
+    "age_category",
+    "duration",
+    "location",
+    "equipment",
+    "rules",
+    "files",
+    "created_by_email",
+    "created_by_name",
+)
 REQUIRED_TABLE_COLUMNS = {
     "games": {
         "id",
@@ -499,6 +517,171 @@ def parse_files_json(value: str | None) -> list[str]:
     except json.JSONDecodeError:
         return []
     return [item for item in parsed if isinstance(item, str)]
+
+
+def serialize_csv_files(value: str | None) -> str:
+    return " | ".join(parse_files_json(value))
+
+
+def parse_csv_files(value: str | None) -> list[str]:
+    if not value:
+        return []
+    return [item.strip() for item in str(value).split("|") if item.strip()]
+
+
+def sniff_csv_dialect(sample: str) -> csv.Dialect:
+    try:
+        return csv.Sniffer().sniff(sample, delimiters=",;\t")
+    except csv.Error:
+        return csv.excel
+
+
+def validate_csv_rows(rows: list[dict[str, str]]) -> tuple[bool, str]:
+    existing_types = {name.casefold(): name for name in fetch_game_types()}
+    existing_ages = {name.casefold(): name for name in fetch_age_categories()}
+
+    for index, row in enumerate(rows, start=2):
+        data = {
+            "title": row.get("title", "").strip(),
+            "game_type": join_multi_categories(parse_multi_categories(row.get("game_type", ""))),
+            "goal": row.get("goal", "").strip(),
+            "participants": row.get("participants", "").strip(),
+            "age_category": row.get("age_category", "").strip(),
+            "duration": row.get("duration", "").strip(),
+            "location": row.get("location", "").strip(),
+            "equipment": row.get("equipment", "").strip(),
+            "rules": row.get("rules", "").strip(),
+        }
+        errors = validate_game_form(data)
+        if errors:
+            return False, f"Строка {index}: {errors[0]}"
+        if data["location"] not in LOCATION_OPTIONS:
+            return False, f"Строка {index}: недопустимое место проведения «{data['location']}»."
+
+        game_types = parse_multi_categories(data["game_type"])
+        if not game_types:
+            return False, f"Строка {index}: поле «Тип» должно содержать хотя бы одну категорию."
+        for game_type in game_types:
+            existing_types.setdefault(game_type.casefold(), game_type)
+
+        age_category = data["age_category"]
+        existing_ages.setdefault(age_category.casefold(), age_category)
+
+        for filename in parse_csv_files(row.get("files", "")):
+            if (UPLOAD_DIR / filename).exists() or not filename:
+                continue
+            return False, f"Строка {index}: файл «{filename}» не найден в uploads."
+
+        row_id = row.get("id", "").strip()
+        if row_id:
+            try:
+                int(row_id)
+            except ValueError:
+                return False, f"Строка {index}: поле id должно быть целым числом."
+
+    return True, ""
+
+
+def import_games_from_csv(uploaded_file) -> tuple[bool, str]:
+    raw_bytes = uploaded_file.read()
+    try:
+        decoded = raw_bytes.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return False, "CSV должен быть в кодировке UTF-8."
+
+    dialect = sniff_csv_dialect(decoded[:2048])
+    reader = csv.DictReader(io.StringIO(decoded), dialect=dialect)
+    if reader.fieldnames is None:
+        return False, "CSV-файл пуст или не содержит заголовков."
+
+    normalized_fieldnames = [str(name).strip() for name in reader.fieldnames]
+    missing_fields = [field for field in CSV_EXPORT_FIELDS if field not in normalized_fieldnames]
+    if missing_fields:
+        missing = ", ".join(missing_fields)
+        return False, f"В CSV отсутствуют колонки: {missing}."
+
+    rows = []
+    for row in reader:
+        normalized_row = {str(key).strip(): (value or "") for key, value in row.items() if key is not None}
+        if not any(str(value).strip() for value in normalized_row.values()):
+            continue
+        rows.append(normalized_row)
+
+    if not rows:
+        return False, "CSV не содержит строк с упражнениями."
+
+    is_valid, error_message = validate_csv_rows(rows)
+    if not is_valid:
+        return False, error_message
+
+    db = get_db()
+    known_type_names = {name.casefold(): name for name in fetch_game_types()}
+    known_age_names = {name.casefold(): name for name in fetch_age_categories()}
+
+    try:
+        db.execute("BEGIN")
+        for row in rows:
+            normalized_types = parse_multi_categories(row.get("game_type", ""))
+            for game_type in normalized_types:
+                if game_type.casefold() not in known_type_names:
+                    db.execute("INSERT INTO game_types (name) VALUES (?)", (game_type,))
+                    known_type_names[game_type.casefold()] = game_type
+
+            age_category = row.get("age_category", "").strip()
+            if age_category and age_category.casefold() not in known_age_names:
+                db.execute("INSERT INTO age_categories (name) VALUES (?)", (age_category,))
+                known_age_names[age_category.casefold()] = age_category
+
+            payload = (
+                row.get("title", "").strip(),
+                join_multi_categories(normalized_types),
+                row.get("goal", "").strip(),
+                row.get("participants", "").strip(),
+                age_category,
+                row.get("duration", "").strip(),
+                row.get("location", "").strip(),
+                row.get("equipment", "").strip(),
+                row.get("rules", "").strip(),
+                json.dumps(parse_csv_files(row.get("files", "")), ensure_ascii=False),
+                normalize_email(row.get("created_by_email", "")),
+                row.get("created_by_name", "").strip(),
+            )
+
+            row_id = row.get("id", "").strip()
+            if row_id:
+                existing = db.execute("SELECT id FROM games WHERE id = ?", (int(row_id),)).fetchone()
+                if existing:
+                    db.execute(
+                        """
+                        UPDATE games
+                        SET title = ?, game_type = ?, goal = ?, participants = ?,
+                            age_category = ?, duration = ?, location = ?, equipment = ?,
+                            rules = ?, files_json = ?, created_by_email = ?, created_by_name = ?,
+                            updated_at = CURRENT_TIMESTAMP
+                        WHERE id = ?
+                        """,
+                        (*payload, int(row_id)),
+                    )
+                    continue
+
+            db.execute(
+                """
+                INSERT INTO games (
+                    title, game_type, goal, participants, age_category,
+                    duration, location, equipment, rules, files_json,
+                    created_by_email, created_by_name
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                payload,
+            )
+
+        db.commit()
+    except sqlite3.Error:
+        db.rollback()
+        return False, "Не удалось импортировать упражнения из CSV."
+
+    return True, f"Импортировано упражнений: {len(rows)}."
 
 
 def validate_import_database(path: Path) -> tuple[bool, str]:
@@ -855,10 +1038,10 @@ def add_game():
 def admin_list():
     init_db()
     active_tab = request.args.get("tab", "games")
-    if active_tab not in {"games", "properties"}:
+    if active_tab not in {"games", "properties", "access"}:
         active_tab = "games"
     property_tab = request.args.get("property_tab", "game-types")
-    if property_tab not in {"game-types", "age-categories", "access-users"}:
+    if property_tab not in {"game-types", "age-categories"}:
         property_tab = "game-types"
     games = get_db().execute("SELECT * FROM games ORDER BY updated_at DESC, id DESC").fetchall()
     return render_template(
@@ -954,6 +1137,51 @@ def export_database():
     )
 
 
+@app.get("/admin/export/csv")
+@admin_required
+def export_games_csv():
+    init_db()
+    games = get_db().execute(
+        """
+        SELECT id, title, game_type, goal, participants, age_category, duration,
+               location, equipment, rules, files_json, created_by_email, created_by_name
+        FROM games
+        ORDER BY id ASC
+        """
+    ).fetchall()
+
+    buffer = io.StringIO()
+    writer = csv.DictWriter(buffer, fieldnames=CSV_EXPORT_FIELDS)
+    writer.writeheader()
+    for game in games:
+        writer.writerow(
+            {
+                "id": game["id"],
+                "title": game["title"],
+                "game_type": game["game_type"],
+                "goal": game["goal"],
+                "participants": game["participants"],
+                "age_category": game["age_category"],
+                "duration": game["duration"],
+                "location": game["location"],
+                "equipment": game["equipment"],
+                "rules": game["rules"],
+                "files": serialize_csv_files(game["files_json"]),
+                "created_by_email": game["created_by_email"],
+                "created_by_name": game["created_by_name"],
+            }
+        )
+
+    csv_content = "\ufeff" + buffer.getvalue()
+    return Response(
+        csv_content,
+        mimetype="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": "attachment; filename=games_manual_export.csv",
+        },
+    )
+
+
 @app.post("/admin/import")
 @admin_required
 def import_database():
@@ -990,6 +1218,24 @@ def import_database():
         temp_path.unlink(missing_ok=True)
         flash("Не удалось сохранить импортируемую базу данных.", "error")
 
+    return redirect(url_for("admin_list", tab="games"))
+
+
+@app.post("/admin/import/csv")
+@admin_required
+def import_games_csv():
+    uploaded_file = request.files.get("csv_file")
+    if not uploaded_file or not uploaded_file.filename:
+        flash("Выберите CSV-файл для импорта упражнений.", "error")
+        return redirect(url_for("admin_list", tab="games"))
+
+    extension = Path(uploaded_file.filename).suffix.lower()
+    if extension not in IMPORTABLE_CSV_EXTENSIONS:
+        flash("Поддерживаются только файлы .csv.", "error")
+        return redirect(url_for("admin_list", tab="games"))
+
+    success, message = import_games_from_csv(uploaded_file)
+    flash(message, "success" if success else "error")
     return redirect(url_for("admin_list", tab="games"))
 
 
@@ -1220,7 +1466,7 @@ def save_access_users():
     init_db()
     success, message = apply_bulk_access_updates(request.form)
     flash(message, "success" if success else "error")
-    return redirect(url_for("admin_list", tab="properties", property_tab="access-users"))
+    return redirect(url_for("admin_list", tab="access"))
 
 
 @app.post("/admin/age-categories/<int:age_id>/edit")
