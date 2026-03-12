@@ -674,6 +674,19 @@ small {
   word-break: normal;
 }
 
+.dropdown-types-panel {
+  overflow-x: auto;
+}
+
+.dropdown-types-list .dropdown-option {
+  min-width: max-content;
+}
+
+.dropdown-types-list .dropdown-option-label {
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
 .multi-checkbox-item {
   display: flex;
   align-items: center;

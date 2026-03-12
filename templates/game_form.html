@@ -34,8 +34,8 @@
             </span>
             <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
           </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
+          <div class="dropdown-multiselect-panel dropdown-types-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list dropdown-types-list">
               {% for game_type in game_types %}
                 <label class="dropdown-option">
                   <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %} data-dropdown-option>
