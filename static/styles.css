@@ -175,6 +175,11 @@ a {
   padding: 0;
 }
 
+.theme-toggle + .auth-controls,
+.theme-toggle + .auth-button {
+  margin-left: 0.5rem;
+}
+
 .theme-toggle:hover {
   transform: none;
   opacity: 1;
