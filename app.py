@@ -2,8 +2,9 @@ import json
 import os
 import secrets
 import sqlite3
+import tempfile
 
-from flask import Flask, abort, flash, g, redirect, render_template, request, send_from_directory, url_for
+from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, url_for
 from werkzeug.utils import secure_filename
 
 
@@ -127,6 +128,27 @@ CREATE TABLE IF NOT EXISTS age_categories (
     name TEXT NOT NULL UNIQUE
 );
 """
+
+IMPORTABLE_DB_EXTENSIONS = {".db", ".sqlite", ".sqlite3"}
+REQUIRED_TABLE_COLUMNS = {
+    "games": {
+        "id",
+        "title",
+        "game_type",
+        "goal",
+        "participants",
+        "age_category",
+        "duration",
+        "location",
+        "equipment",
+        "rules",
+        "files_json",
+        "created_at",
+        "updated_at",
+    },
+    "game_types": {"id", "name"},
+    "age_categories": {"id", "name"},
+}
 
 
 app = Flask(__name__)
@@ -336,6 +358,31 @@ def parse_files_json(value: str | None) -> list[str]:
     return [item for item in parsed if isinstance(item, str)]
 
 
+def validate_import_database(path: Path) -> tuple[bool, str]:
+    try:
+        with sqlite3.connect(path) as db:
+            for table_name, required_columns in REQUIRED_TABLE_COLUMNS.items():
+                table_exists = db.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+                    (table_name,),
+                ).fetchone()
+                if table_exists is None:
+                    return False, f"В импортируемой базе нет таблицы {table_name}."
+
+                columns = {
+                    row[1]
+                    for row in db.execute(f"PRAGMA table_info({table_name})").fetchall()
+                }
+                missing_columns = required_columns - columns
+                if missing_columns:
+                    missing = ", ".join(sorted(missing_columns))
+                    return False, f"В таблице {table_name} отсутствуют поля: {missing}."
+    except sqlite3.Error:
+        return False, "Файл не является корректной SQLite-базой."
+
+    return True, ""
+
+
 def build_filters(args) -> tuple[str, list[str]]:
     clauses = []
     params: list[str] = []
@@ -527,6 +574,62 @@ def admin_list():
         parse_files_json=parse_files_json,
         parse_multi_categories=parse_multi_categories,
     )
+
+
+@app.get("/admin/export")
+def export_database():
+    init_db()
+    if "db" in g:
+        g.db.commit()
+
+    if not DATABASE_PATH.exists():
+        flash("Файл базы данных пока не создан.", "error")
+        return redirect(url_for("admin_list", tab="games"))
+
+    return send_file(
+        DATABASE_PATH,
+        as_attachment=True,
+        download_name="games_manual_export.db",
+        mimetype="application/octet-stream",
+    )
+
+
+@app.post("/admin/import")
+def import_database():
+    uploaded_file = request.files.get("database_file")
+    if not uploaded_file or not uploaded_file.filename:
+        flash("Выберите файл базы данных для импорта.", "error")
+        return redirect(url_for("admin_list", tab="games"))
+
+    extension = Path(uploaded_file.filename).suffix.lower()
+    if extension not in IMPORTABLE_DB_EXTENSIONS:
+        flash("Поддерживаются только файлы .db, .sqlite и .sqlite3.", "error")
+        return redirect(url_for("admin_list", tab="games"))
+
+    DATABASE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        dir=DATABASE_PATH.parent,
+        suffix=extension,
+        delete=False,
+    ) as temp_file:
+        temp_path = Path(temp_file.name)
+
+    try:
+        uploaded_file.save(temp_path)
+        is_valid, error_message = validate_import_database(temp_path)
+        if not is_valid:
+            temp_path.unlink(missing_ok=True)
+            flash(error_message, "error")
+            return redirect(url_for("admin_list", tab="games"))
+
+        close_db(None)
+        os.replace(temp_path, DATABASE_PATH)
+        flash("База данных импортирована.", "success")
+    except OSError:
+        temp_path.unlink(missing_ok=True)
+        flash("Не удалось сохранить импортируемую базу данных.", "error")
+
+    return redirect(url_for("admin_list", tab="games"))
 
 
 @app.route("/admin/<int:game_id>/edit", methods=("GET", "POST"))

@@ -16,6 +16,8 @@ python3 app.py
 ## Запуск через Docker Compose
 
 ```bash
+git clone https://github.com/Wool5443/games_manual.git
+cd games_manual
 cp .env.example .env
 docker compose up -d --build
 ```

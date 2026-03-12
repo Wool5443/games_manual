@@ -9,7 +9,16 @@
       <h1>Полное редактирование базы</h1>
       <p class="lead">Редактирование, удаление и быстрый переход к добавлению новых записей.</p>
     </div>
-    <a class="hero-action" href="{{ url_for('add_game') }}">Добавить новую запись</a>
+    <div class="hero-admin-actions">
+      <a class="hero-action" href="{{ url_for('add_game') }}">Добавить новую запись</a>
+      <a class="button-secondary" href="{{ url_for('export_database') }}">Экспорт базы</a>
+      <form class="admin-import-form" method="post" action="{{ url_for('import_database') }}" enctype="multipart/form-data">
+        <label class="admin-import-picker">
+          <input type="file" name="database_file" accept=".db,.sqlite,.sqlite3" required>
+          <span class="button-secondary">Импорт базы</span>
+        </label>
+      </form>
+    </div>
   </section>
 
   <section class="panel">
@@ -121,4 +130,20 @@
       </div>
     {% endif %}
   </section>
+{% endblock %}
+
+{% block scripts %}
+  <script>
+    (function () {
+      const input = document.querySelector(".admin-import-picker input[type='file']");
+      const form = document.querySelector(".admin-import-form");
+      if (!input || !form) return;
+
+      input.addEventListener("change", function () {
+        if (input.files && input.files[0]) {
+          form.requestSubmit();
+        }
+      });
+    })();
+  </script>
 {% endblock %}

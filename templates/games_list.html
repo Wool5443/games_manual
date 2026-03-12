@@ -136,7 +136,7 @@
           <div><dt>Возраст</dt><dd>{{ game['age_category'] }}</dd></div>
           <div><dt>Длительность</dt><dd>{{ game['duration'] }}</dd></div>
           <div><dt>Место</dt><dd>{{ game['location'] }}</dd></div>
-          <div><dt>Оборудование</dt><dd>{{ game['equipment'] }}</dd></div>
+          <div><dt>Оборудование</dt><dd>{{ game['equipment'] or 'Оборудование не требуется' }}</dd></div>
         </dl>
         <section class="card-text">
           <h3>Правила</h3>
