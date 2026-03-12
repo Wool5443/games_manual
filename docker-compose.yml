@@ -21,8 +21,9 @@ services:
       - -c
       - |
           set -eu
+          mkdir -p "$$APP_DIR"
           if [ ! -d "$$APP_DIR/.git" ]; then
-            rm -rf "$$APP_DIR"
+            find "$$APP_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
             git clone "$$REPO_URL" "$$APP_DIR"
           else
             git -C "$$APP_DIR" fetch --all --prune
@@ -30,7 +31,7 @@ services:
           fi
           pip install --no-cache-dir -r "$$APP_DIR/requirements.txt"
           mkdir -p "$$APP_DIR/instance" "$$APP_DIR/uploads"
-          exec python "$$APP_DIR/app.py"
+          exec python -c "import os, sys; sys.path.insert(0, os.environ['APP_DIR']); from app import app, init_db; ctx = app.app_context(); ctx.push(); init_db(); ctx.pop(); app.run(host='0.0.0.0', port=int(os.environ.get('PORT', '5000')), debug=False)"
 
 volumes:
   app_data:
