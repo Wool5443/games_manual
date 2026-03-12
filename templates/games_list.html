@@ -121,15 +121,29 @@
 
   <section class="card-grid">
     {% for game in games %}
-      <article class="card card-expandable" data-card-expandable tabindex="0" role="button" aria-label="Открыть карточку {{ game['title'] }}">
+      <article class="card card-expandable{% if is_own_game(game) %} card-owned{% endif %}" data-card-expandable tabindex="0" role="button" aria-label="Открыть карточку {{ game['title'] }}">
         <div class="card-header">
-          <h2>{{ game['title'] }}</h2>
+          <div class="card-heading">
+            <h2>{{ game['title'] }}</h2>
+            {% if is_own_game(game) %}
+              <span class="card-owned-badge">Моя игра</span>
+            {% endif %}
+          </div>
           <div class="tag-list">
             {% for item in parse_multi_categories(game['game_type']) %}
               <div>{{ item }}</div>
             {% endfor %}
           </div>
         </div>
+        {% if can_edit_game(game) %}
+          <div class="card-overlay-actions">
+            {% if is_admin_authenticated %}
+              <a class="button-secondary" href="{{ url_for('admin_edit_game', game_id=game['id']) }}">Редактировать</a>
+            {% else %}
+              <a class="button-secondary" href="{{ url_for('edit_game', game_id=game['id'], return_to=url_for('games_list')) }}">Редактировать</a>
+            {% endif %}
+          </div>
+        {% endif %}
         <dl class="details">
           <div><dt>Цель</dt><dd>{{ game['goal'] }}</dd></div>
           <div><dt>Участники</dt><dd>{{ game['participants'] }}</dd></div>
@@ -185,6 +199,8 @@
       let activeCard = null;
       let activeGhost = null;
       let isAnimating = false;
+      let revealTimer = null;
+      let cleanupTimer = null;
 
       const cleanupGhost = function () {
         if (activeGhost) {
@@ -193,12 +209,28 @@
         }
       };
 
+      const clearTimers = function () {
+        if (revealTimer) {
+          window.clearTimeout(revealTimer);
+          revealTimer = null;
+        }
+        if (cleanupTimer) {
+          window.clearTimeout(cleanupTimer);
+          cleanupTimer = null;
+        }
+      };
+
       const closeModal = function () {
         if (isAnimating) return;
+        clearTimers();
         modal.classList.remove("is-open");
         modal.classList.remove("is-animating");
+        modal.classList.remove("is-revealing");
         document.body.classList.remove("modal-open");
         cleanupGhost();
+        if (activeCard) {
+          activeCard.classList.remove("is-expanding");
+        }
         window.setTimeout(function () {
           modal.hidden = true;
           modalContent.innerHTML = "";
@@ -212,6 +244,7 @@
       const openModal = function (card) {
         if (isAnimating || !modal.hidden) return;
         activeCard = card;
+        activeCard.classList.add("is-expanding");
         modalContent.innerHTML = "";
         const clone = card.cloneNode(true);
         clone.classList.remove("card-expandable");
@@ -244,19 +277,34 @@
         isAnimating = true;
 
         requestAnimationFrame(function () {
-          const targetRect = modalDialog.getBoundingClientRect();
-          ghost.style.top = targetRect.top + "px";
-          ghost.style.left = targetRect.left + "px";
-          ghost.style.width = targetRect.width + "px";
-          ghost.style.height = targetRect.height + "px";
-          ghost.style.borderRadius = getComputedStyle(clone).borderRadius;
+          requestAnimationFrame(function () {
+            const targetRect = modalDialog.getBoundingClientRect();
+            ghost.style.top = targetRect.top + "px";
+            ghost.style.left = targetRect.left + "px";
+            ghost.style.width = targetRect.width + "px";
+            ghost.style.height = targetRect.height + "px";
+            ghost.style.borderRadius = getComputedStyle(clone).borderRadius;
+          });
         });
 
-        window.setTimeout(function () {
+        revealTimer = window.setTimeout(function () {
+          modal.classList.add("is-revealing");
+          if (activeGhost) {
+            activeGhost.classList.add("is-fading");
+          }
+        }, 250);
+
+        cleanupTimer = window.setTimeout(function () {
           modal.classList.remove("is-animating");
+          modal.classList.remove("is-revealing");
           cleanupGhost();
+          if (activeCard) {
+            activeCard.classList.remove("is-expanding");
+          }
           isAnimating = false;
-        }, 340);
+          revealTimer = null;
+          cleanupTimer = null;
+        }, 430);
       };
 
       cards.forEach(function (card) {

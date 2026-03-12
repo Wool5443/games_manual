@@ -770,6 +770,12 @@ def can_edit_game(game: sqlite3.Row | dict) -> bool:
     return normalize_email(game["created_by_email"]) == get_current_user_email()
 
 
+def is_own_game(game: sqlite3.Row | dict) -> bool:
+    if not get_current_user_email():
+        return False
+    return normalize_email(game["created_by_email"]) == get_current_user_email()
+
+
 def safe_redirect_target(raw_target: str | None, fallback: str | None = None) -> str:
     if not raw_target:
         return fallback or url_for("admin_list")
@@ -1525,8 +1531,11 @@ def inject_globals():
         "sortable_fields": SORTABLE_FIELDS,
         "parse_multi_categories": parse_multi_categories,
         "current_user": get_current_user(),
+        "current_user_email": get_current_user_email(),
         "current_user_role": get_current_user_role(),
         "can_add_games": can_add_games(),
+        "can_edit_game": can_edit_game,
+        "is_own_game": is_own_game,
         "is_admin_authenticated": is_admin_authenticated(),
         "google_auth_enabled": is_google_auth_enabled(),
         "versioned_static": versioned_static,

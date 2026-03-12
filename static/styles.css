@@ -763,6 +763,7 @@ small {
   padding: 1.15rem;
   box-shadow: var(--shadow);
   min-width: 0;
+  position: relative;
 }
 
 .card-expandable {
@@ -775,6 +776,11 @@ small {
   transform: translateY(-2px);
   box-shadow: 0 20px 40px rgba(31, 26, 23, 0.14);
   border-color: rgba(125, 8, 8, 0.28);
+}
+
+.card-expandable.is-expanding {
+  opacity: 0;
+  transform: none;
 }
 
 .card-modal {
@@ -826,6 +832,11 @@ small {
   transition: none;
 }
 
+.card-modal.is-revealing .card-modal-dialog {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
 .card-modal.is-open .card-modal-backdrop {
   opacity: 1;
 }
@@ -841,19 +852,29 @@ small {
   border-radius: 24px;
 }
 
+.card-owned {
+  border-color: rgba(125, 8, 8, 0.28);
+}
+
 .card-modal-ghost {
   position: fixed;
   margin: 0;
   z-index: 121;
   overflow: hidden;
   pointer-events: none;
+  opacity: 1;
   transition:
     top 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     left 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     height 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     border-radius 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
+    opacity 0.18s ease;
+}
+
+.card-modal-ghost.is-fading {
+  opacity: 0;
 }
 
 .card-modal-close {
@@ -874,6 +895,27 @@ small {
   gap: 1rem;
   align-items: flex-start;
   min-width: 0;
+}
+
+.card-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.card-owned-badge {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .tag-list {
@@ -901,6 +943,22 @@ small {
 .card-header h2 {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.card-overlay-actions {
+  display: none;
+}
+
+.card-modal-content .card-overlay-actions {
+  position: absolute;
+  top: 1.15rem;
+  right: 1.15rem;
+  z-index: 2;
+  display: flex;
+}
+
+.card-modal-content .card-overlay-actions .button-secondary {
+  padding: 0.5rem 0.85rem;
 }
 
 .tag-list > div {
