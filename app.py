@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 import sqlite3
 
@@ -129,7 +130,7 @@ CREATE TABLE IF NOT EXISTS age_categories (
 
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = "dev-secret-key-change-me"
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "dev-secret-key-change-me")
 app.config["MAX_CONTENT_LENGTH"] = 512 * 1024 * 1024
 
 
@@ -785,4 +786,6 @@ def inject_globals():
 if __name__ == "__main__":
     with app.app_context():
         init_db()
-    app.run(debug=True)
+    port = int(os.getenv("PORT", "5000"))
+    debug = os.getenv("FLASK_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+    app.run(host="0.0.0.0", port=port, debug=debug)

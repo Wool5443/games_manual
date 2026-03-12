@@ -12,3 +12,12 @@ python3 app.py
 ```
 
 После запуска приложение будет доступно на `http://127.0.0.1:5000`.
+
+## Запуск через Docker Compose
+
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+
+Приложение будет доступно на порту, указанном в `.env` через переменную `PORT`.
