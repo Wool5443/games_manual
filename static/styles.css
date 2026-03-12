@@ -503,8 +503,9 @@ small {
 }
 
 .tag-list {
-  width: fit-content;
-  max-width: min(100%, 60%);
+  flex: 0 1 55%;
+  width: auto;
+  max-width: 55%;
   min-width: 0;
   margin-left: auto;
   align-self: flex-start;
@@ -514,12 +515,24 @@ small {
   white-space: normal;
   word-break: normal;
   overflow-wrap: break-word;
+  hyphens: auto;
   text-align: right;
 }
 
 .card-header h2,
 .card h3 {
   margin: 0;
+}
+
+.card-header h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.tag-list > div {
+  display: block;
+  max-width: 100%;
+  hyphens: auto;
 }
 
 .details {
