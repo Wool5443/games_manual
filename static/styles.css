@@ -691,11 +691,23 @@ small {
 }
 
 .dropdown-types-panel {
-  overflow-x: auto;
+  left: 0;
+  right: auto;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(90vw, 56rem);
+  overflow: hidden;
+}
+
+.dropdown-types-list {
+  width: max-content;
+  min-width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .dropdown-types-list .dropdown-option {
-  min-width: max-content;
+  min-width: 100%;
 }
 
 .dropdown-types-list .dropdown-option-label {
