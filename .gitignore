@@ -2,6 +2,7 @@
 __pycache__/
 instance/
 uploads/
+docker_data/
 .env
 Game_manual.xlsx
 Game_manual original.xlsx

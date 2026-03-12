@@ -13,10 +13,6 @@ services:
     ports:
       - "${PORT:-5000}:${PORT:-5000}"
     volumes:
-      - app_instance:/srv/app/instance
-      - app_uploads:/srv/app/uploads
+      - ./docker_data/instance:/srv/app/instance:Z
+      - ./docker_data/uploads:/srv/app/uploads:Z
     command: python /srv/app/app.py
-
-volumes:
-  app_instance:
-  app_uploads:
