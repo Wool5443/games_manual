@@ -272,7 +272,10 @@
   <div class="card-modal" id="card-modal" hidden>
     <div class="card-modal-backdrop" data-card-modal-close></div>
     <div class="card-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
-      <button class="card-modal-close" type="button" data-card-modal-close aria-label="Закрыть карточку">Закрыть</button>
+      <div class="card-modal-toolbar">
+        <div class="card-modal-toolbar-actions" id="card-modal-toolbar-actions"></div>
+        <button class="card-modal-close" type="button" data-card-modal-close aria-label="Закрыть карточку">Закрыть</button>
+      </div>
       <div class="card-modal-content" id="card-modal-content"></div>
     </div>
   </div>
@@ -344,9 +347,10 @@
 
       const modal = document.getElementById("card-modal");
       const modalContent = document.getElementById("card-modal-content");
+      const modalToolbarActions = document.getElementById("card-modal-toolbar-actions");
       const modalDialog = modal ? modal.querySelector(".card-modal-dialog") : null;
       const cards = Array.from(document.querySelectorAll("[data-card-expandable]"));
-      if (!modal || !modalContent || !modalDialog || !cards.length) return;
+      if (!modal || !modalContent || !modalToolbarActions || !modalDialog || !cards.length) return;
 
       let activeCard = null;
       let activeGhost = null;
@@ -382,6 +386,7 @@
         window.setTimeout(function () {
           modal.hidden = true;
           modalContent.innerHTML = "";
+          modalToolbarActions.innerHTML = "";
         }, 220);
         if (activeCard) {
           activeCard.focus();
@@ -401,6 +406,13 @@
         clone.removeAttribute("role");
         clone.removeAttribute("aria-label");
         clone.id = "card-modal-title";
+        const cloneActions = clone.querySelector(".card-overlay-actions");
+        if (cloneActions) {
+          modalToolbarActions.innerHTML = cloneActions.innerHTML;
+          cloneActions.remove();
+        } else {
+          modalToolbarActions.innerHTML = "";
+        }
         modalContent.appendChild(clone);
 
         const sourceRect = card.getBoundingClientRect();

@@ -847,7 +847,7 @@ small {
   box-shadow: 0 32px 80px rgba(16, 11, 9, 0.3);
   transform: translateY(20px) scale(0.96);
   opacity: 0;
-  transition: transform 0.24s ease, opacity 0.24s ease;
+  transition: transform 0.24s ease;
 }
 
 .card-modal.is-animating .card-modal-dialog {
@@ -879,6 +879,32 @@ small {
   border-radius: 24px;
 }
 
+.card-modal-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin: -1.1rem -1.1rem 1rem;
+  padding: 1.1rem;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--line);
+}
+
+.card-modal-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.card-modal-toolbar-actions:empty {
+  display: none;
+}
+
 .card-owned {
   border-color: rgba(125, 8, 8, 0.28);
 }
@@ -905,11 +931,9 @@ small {
 }
 
 .card-modal-close {
-  position: sticky;
-  top: 0;
-  margin-left: auto;
-  margin-bottom: 0.8rem;
-  z-index: 1;
+  position: static;
+  margin: 0 0 0 auto;
+  z-index: auto;
 }
 
 .modal-open {
@@ -976,15 +1000,7 @@ small {
   display: none;
 }
 
-.card-modal-content .card-overlay-actions {
-  position: absolute;
-  top: 1.15rem;
-  right: 1.15rem;
-  z-index: 2;
-  display: flex;
-}
-
-.card-modal-content .card-overlay-actions .button-secondary {
+.card-modal-toolbar .button-secondary {
   padding: 0.5rem 0.85rem;
 }
 
