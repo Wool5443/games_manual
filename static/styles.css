@@ -386,6 +386,10 @@ fieldset {
   padding: 0 0.25rem;
 }
 
+.dropdown-field {
+  align-content: start;
+}
+
 input,
 select,
 textarea {

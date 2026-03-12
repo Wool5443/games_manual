@@ -20,8 +20,8 @@
         <input type="text" name="title" value="{{ game.get('title', '') }}" required>
       </label>
 
-      <fieldset class="form-field">
-        <legend>Тип <strong class="required-mark">*</strong></legend>
+      <label class="dropdown-field">
+        <span>Тип <strong class="required-mark">*</strong></span>
         {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
         <div class="dropdown-multiselect" data-dropdown-multiselect>
           <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
@@ -46,7 +46,7 @@
             </div>
           </div>
         </div>
-      </fieldset>
+      </label>
 
       <label>
         <span>Цель <strong class="required-mark">*</strong></span>
