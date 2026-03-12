@@ -639,6 +639,12 @@ small {
   color: var(--muted);
 }
 
+.card-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-start;
+}
+
 .file-list {
   margin: 0;
   padding-left: 1.1rem;
@@ -777,9 +783,19 @@ small {
   flex: 1 1 240px;
 }
 
+.category-item select {
+  flex: 0 0 220px;
+  min-width: 0;
+}
+
 .property-bulk-form {
   display: grid;
   gap: 1rem;
+}
+
+.property-help {
+  margin: 0 0 1rem;
+  color: var(--muted);
 }
 
 .property-toggle {

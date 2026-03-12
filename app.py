@@ -54,6 +54,10 @@ DEFAULT_GAME_TYPES = (
 )
 DEFAULT_AGE_OPTIONS = ("7+", "10+", "12+", "Любой")
 LOCATION_OPTIONS = ("Не имеет значения", "Помещение", "Улица")
+ACCESS_ROLE_LABELS = {
+    "admin": "Администратор",
+    "editor": "Добавление игр",
+}
 
 ALLOWED_EXTENSIONS = {
     "txt",
@@ -117,6 +121,8 @@ CREATE TABLE IF NOT EXISTS games (
     equipment TEXT NOT NULL,
     rules TEXT NOT NULL,
     files_json TEXT NOT NULL DEFAULT '[]',
+    created_by_email TEXT NOT NULL DEFAULT '',
+    created_by_name TEXT NOT NULL DEFAULT '',
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -129,6 +135,13 @@ CREATE TABLE IF NOT EXISTS game_types (
 CREATE TABLE IF NOT EXISTS age_categories (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE IF NOT EXISTS access_users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'editor')),
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 """
 
@@ -195,6 +208,14 @@ def close_db(_error: Exception | None) -> None:
 def init_db() -> None:
     db = get_db()
     db.executescript(SCHEMA)
+    game_columns = {
+        row[1]
+        for row in db.execute("PRAGMA table_info(games)").fetchall()
+    }
+    if "created_by_email" not in game_columns:
+        db.execute("ALTER TABLE games ADD COLUMN created_by_email TEXT NOT NULL DEFAULT ''")
+    if "created_by_name" not in game_columns:
+        db.execute("ALTER TABLE games ADD COLUMN created_by_name TEXT NOT NULL DEFAULT ''")
     existing_types = db.execute("SELECT COUNT(*) FROM game_types").fetchone()[0]
     if existing_types == 0:
         for name in DEFAULT_GAME_TYPES:
@@ -228,10 +249,25 @@ def fetch_age_category_rows() -> list[sqlite3.Row]:
     return get_db().execute("SELECT id, name FROM age_categories ORDER BY id ASC").fetchall()
 
 
+def fetch_access_rows() -> list[sqlite3.Row]:
+    init_db()
+    return get_db().execute(
+        """
+        SELECT id, email, role
+        FROM access_users
+        ORDER BY CASE role WHEN 'admin' THEN 0 ELSE 1 END, email COLLATE NOCASE
+        """
+    ).fetchall()
+
+
 def versioned_static(filename: str) -> str:
     static_path = BASE_DIR / "static" / filename
     version = int(static_path.stat().st_mtime) if static_path.exists() else 0
     return url_for("static", filename=filename, v=version)
+
+
+def normalize_email(value: str | None) -> str:
+    return str(value or "").strip().casefold()
 
 
 def parse_multi_categories(value: str | None) -> list[str]:
@@ -351,6 +387,86 @@ def apply_bulk_property_updates(
     return True, f"Список «{entity_label}» обновлён."
 
 
+def apply_bulk_access_updates(form) -> tuple[bool, str]:
+    db = get_db()
+    existing_rows = fetch_access_rows()
+    existing_by_id = {
+        str(row["id"]): {
+            "email": row["email"],
+            "role": row["role"],
+        }
+        for row in existing_rows
+    }
+    submitted_ids = form.getlist("item_id")
+    submitted_emails = form.getlist("item_email")
+    submitted_roles = form.getlist("item_role")
+    delete_ids = set(form.getlist("delete_item"))
+    new_admins = [normalize_email(item) for item in form.get("new_admins", "").splitlines() if normalize_email(item)]
+    new_editors = [normalize_email(item) for item in form.get("new_editors", "").splitlines() if normalize_email(item)]
+
+    if len(submitted_ids) != len(submitted_emails) or len(submitted_ids) != len(submitted_roles):
+        return False, "Некорректные данные формы доступа."
+
+    final_entries: list[tuple[str, str]] = []
+    updates: list[tuple[str, str, str]] = []
+    delete_row_ids: list[int] = []
+
+    for item_id, raw_email, role in zip(submitted_ids, submitted_emails, submitted_roles):
+        current = existing_by_id.get(item_id)
+        if current is None:
+            return False, "Один из пользователей доступа не найден."
+        if role not in ACCESS_ROLE_LABELS:
+            return False, "Указана неизвестная роль доступа."
+
+        if item_id in delete_ids:
+            delete_row_ids.append(int(item_id))
+            continue
+
+        normalized_email = normalize_email(raw_email)
+        if not normalized_email:
+            return False, "Email пользователя доступа не может быть пустым."
+
+        final_entries.append((normalized_email, role))
+        if normalized_email != current["email"] or role != current["role"]:
+            updates.append((normalized_email, role, item_id))
+
+    final_entries.extend((email, "admin") for email in new_admins)
+    final_entries.extend((email, "editor") for email in new_editors)
+
+    final_emails = [email for email, _role in final_entries]
+    if len(final_emails) != len(set(final_emails)):
+        return False, "В списке доступа найдены повторяющиеся email."
+
+    admin_count = sum(1 for _email, role in final_entries if role == "admin")
+    if admin_count == 0 and not ADMIN_EMAILS:
+        return False, "Нельзя сохранить доступ без хотя бы одного администратора."
+
+    try:
+        db.execute("BEGIN")
+
+        for normalized_email, role, item_id in updates:
+            db.execute(
+                "UPDATE access_users SET email = ?, role = ? WHERE id = ?",
+                (normalized_email, role, item_id),
+            )
+
+        for row_id in delete_row_ids:
+            db.execute("DELETE FROM access_users WHERE id = ?", (row_id,))
+
+        for email in new_admins:
+            db.execute("INSERT INTO access_users (email, role) VALUES (?, 'admin')", (email,))
+
+        for email in new_editors:
+            db.execute("INSERT INTO access_users (email, role) VALUES (?, 'editor')", (email,))
+
+        db.commit()
+    except sqlite3.IntegrityError:
+        db.rollback()
+        return False, "Не удалось сохранить доступ: найдено дублирующееся значение."
+
+    return True, "Список пользователей с доступом обновлён."
+
+
 def allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -411,7 +527,7 @@ def validate_import_database(path: Path) -> tuple[bool, str]:
 
 
 def is_google_auth_enabled() -> bool:
-    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and ADMIN_EMAILS and oauth.create_client("google"))
+    return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and oauth.create_client("google"))
 
 
 def get_current_user() -> dict[str, str] | None:
@@ -419,25 +535,64 @@ def get_current_user() -> dict[str, str] | None:
     return user if isinstance(user, dict) else None
 
 
-def is_admin_authenticated() -> bool:
+def get_current_user_email() -> str:
+    user = get_current_user()
+    if not user or not user.get("email_verified"):
+        return ""
+    return normalize_email(user.get("email"))
+
+
+def get_user_role(email: str | None) -> str | None:
+    normalized_email = normalize_email(email)
+    if not normalized_email:
+        return None
+    if normalized_email in ADMIN_EMAILS:
+        return "admin"
+
+    init_db()
+    row = get_db().execute(
+        "SELECT role FROM access_users WHERE email = ?",
+        (normalized_email,),
+    ).fetchone()
+    if row is None:
+        return None
+    role = row["role"]
+    return role if role in ACCESS_ROLE_LABELS else None
+
+
+def get_current_user_role() -> str | None:
     user = get_current_user()
     if not user:
-        return False
+        return None
 
     email = str(user.get("email", "")).strip().casefold()
     if not email or not user.get("email_verified"):
-        return False
-    if ADMIN_EMAILS and email not in ADMIN_EMAILS:
-        return False
-    return True
+        return None
+    return get_user_role(email)
 
 
-def safe_redirect_target(raw_target: str | None) -> str:
+def is_admin_authenticated() -> bool:
+    return get_current_user_role() == "admin"
+
+
+def can_add_games() -> bool:
+    return get_current_user_role() in {"admin", "editor"}
+
+
+def can_edit_game(game: sqlite3.Row | dict) -> bool:
+    if is_admin_authenticated():
+        return True
+    if not can_add_games():
+        return False
+    return normalize_email(game["created_by_email"]) == get_current_user_email()
+
+
+def safe_redirect_target(raw_target: str | None, fallback: str | None = None) -> str:
     if not raw_target:
-        return url_for("admin_list")
+        return fallback or url_for("admin_list")
     if raw_target.startswith("/") and not raw_target.startswith("//"):
         return raw_target
-    return url_for("admin_list")
+    return fallback or url_for("admin_list")
 
 
 def get_google_redirect_uri() -> str:
@@ -453,15 +608,43 @@ def admin_required(view_func):
         if is_admin_authenticated():
             return view_func(*args, **kwargs)
 
+        if get_current_user():
+            flash("У этого аккаунта нет прав администратора.", "error")
+            return redirect(url_for("games_list"))
+
         if not is_google_auth_enabled():
             flash(
-                "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET и ADMIN_EMAILS.",
+                "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET. Первого администратора можно задать через ADMIN_EMAILS.",
                 "error",
             )
             return redirect(url_for("games_list"))
 
         session["auth_next"] = safe_redirect_target(request.full_path if request.query_string else request.path)
         flash("Войдите через Google для доступа к административным разделам.", "warning")
+        return redirect(url_for("login_google"))
+
+    return wrapped_view
+
+
+def game_editor_required(view_func):
+    @wraps(view_func)
+    def wrapped_view(*args, **kwargs):
+        if can_add_games():
+            return view_func(*args, **kwargs)
+
+        if get_current_user():
+            flash("У этого аккаунта нет прав на добавление игр.", "error")
+            return redirect(url_for("games_list"))
+
+        if not is_google_auth_enabled():
+            flash(
+                "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET. Первого администратора можно задать через ADMIN_EMAILS.",
+                "error",
+            )
+            return redirect(url_for("games_list"))
+
+        session["auth_next"] = safe_redirect_target(request.full_path if request.query_string else request.path)
+        flash("Войдите через Google для добавления новых игр.", "warning")
         return redirect(url_for("login_google"))
 
     return wrapped_view
@@ -581,10 +764,33 @@ def games_list():
     )
 
 
+@app.route("/my-games")
+@game_editor_required
+def my_games():
+    init_db()
+    games = get_db().execute(
+        """
+        SELECT *
+        FROM games
+        WHERE created_by_email = ?
+        ORDER BY updated_at DESC, id DESC
+        """,
+        (get_current_user_email(),),
+    ).fetchall()
+    return render_template(
+        "my_games.html",
+        games=games,
+        parse_files_json=parse_files_json,
+        parse_multi_categories=parse_multi_categories,
+    )
+
+
 @app.route("/games/new", methods=("GET", "POST"))
-@admin_required
+@game_editor_required
 def add_game():
     init_db()
+    current_user = get_current_user() or {}
+    cancel_url = url_for("my_games")
     if request.method == "POST":
         data = extract_game_form_data(request.form)
         errors = validate_game_form(data)
@@ -598,6 +804,7 @@ def add_game():
                 age_options=fetch_age_categories(),
                 location_options=LOCATION_OPTIONS,
                 is_edit=False,
+                cancel_url=cancel_url,
                 parse_multi_categories=parse_multi_categories,
             )
 
@@ -607,9 +814,10 @@ def add_game():
             """
             INSERT INTO games (
                 title, game_type, goal, participants, age_category,
-                duration, location, equipment, rules, files_json
+                duration, location, equipment, rules, files_json,
+                created_by_email, created_by_name
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 data["title"],
@@ -622,11 +830,13 @@ def add_game():
                 data["equipment"],
                 data["rules"],
                 json.dumps(files, ensure_ascii=False),
+                get_current_user_email(),
+                str(current_user.get("name", "")).strip() or get_current_user_email(),
             ),
         )
         db.commit()
         flash("Запись добавлена.", "success")
-        return redirect(url_for("games_list"))
+        return redirect(url_for("my_games"))
 
     return render_template(
         "game_form.html",
@@ -635,6 +845,7 @@ def add_game():
         age_options=fetch_age_categories(),
         location_options=LOCATION_OPTIONS,
         is_edit=False,
+        cancel_url=cancel_url,
         parse_multi_categories=parse_multi_categories,
     )
 
@@ -647,7 +858,7 @@ def admin_list():
     if active_tab not in {"games", "properties"}:
         active_tab = "games"
     property_tab = request.args.get("property_tab", "game-types")
-    if property_tab not in {"game-types", "age-categories"}:
+    if property_tab not in {"game-types", "age-categories", "access-users"}:
         property_tab = "game-types"
     games = get_db().execute("SELECT * FROM games ORDER BY updated_at DESC, id DESC").fetchall()
     return render_template(
@@ -655,6 +866,8 @@ def admin_list():
         games=games,
         game_types=fetch_game_type_rows(),
         age_categories=fetch_age_category_rows(),
+        access_users=fetch_access_rows(),
+        access_role_labels=ACCESS_ROLE_LABELS,
         active_tab=active_tab,
         property_tab=property_tab,
         parse_files_json=parse_files_json,
@@ -666,7 +879,7 @@ def admin_list():
 def login_google():
     if not is_google_auth_enabled():
         flash(
-            "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET и ADMIN_EMAILS.",
+            "Google авторизация не настроена. Укажите GOOGLE_CLIENT_ID и GOOGLE_CLIENT_SECRET.",
             "error",
         )
         return redirect(url_for("games_list"))
@@ -698,9 +911,10 @@ def google_callback():
         flash("Google-аккаунт должен иметь подтверждённый email.", "error")
         return redirect(url_for("games_list"))
 
-    if ADMIN_EMAILS and email.casefold() not in ADMIN_EMAILS:
+    role = get_user_role(email)
+    if role is None:
         session.pop("user", None)
-        flash("У этого аккаунта нет доступа к админ-панели.", "error")
+        flash("У этого аккаунта нет доступа к добавлению игр или админ-панели.", "error")
         return redirect(url_for("games_list"))
 
     session["user"] = {
@@ -710,7 +924,7 @@ def google_callback():
         "email_verified": bool(userinfo.get("email_verified")),
     }
     flash("Вход через Google выполнен.", "success")
-    return redirect(session.pop("auth_next", url_for("admin_list")))
+    return redirect(session.pop("auth_next", url_for("games_list")))
 
 
 @app.post("/auth/logout")
@@ -779,11 +993,29 @@ def import_database():
     return redirect(url_for("admin_list", tab="games"))
 
 
-@app.route("/admin/<int:game_id>/edit", methods=("GET", "POST"))
-@admin_required
-def edit_game(game_id: int):
+def render_game_edit_form(game, current_files: list[str], return_to: str):
+    return render_template(
+        "game_form.html",
+        game=game,
+        game_types=fetch_game_types(),
+        age_options=fetch_age_categories(),
+        location_options=LOCATION_OPTIONS,
+        is_edit=True,
+        existing_files=current_files,
+        cancel_url=return_to,
+        return_to=return_to,
+        parse_multi_categories=parse_multi_categories,
+    )
+
+
+def handle_game_edit(game_id: int, default_return: str):
     init_db()
     game = get_game_or_404(game_id)
+    if not can_edit_game(game):
+        flash("Вы можете редактировать только игры, которые добавили сами.", "error")
+        return redirect(url_for("my_games"))
+
+    return_to = safe_redirect_target(request.values.get("return_to"), fallback=default_return)
 
     if request.method == "POST":
         data = extract_game_form_data(request.form)
@@ -795,16 +1027,7 @@ def edit_game(game_id: int):
                 flash(error, "error")
             draft_game = dict(data)
             draft_game["id"] = game_id
-            return render_template(
-                "game_form.html",
-                game=draft_game,
-                game_types=fetch_game_types(),
-                age_options=fetch_age_categories(),
-                location_options=LOCATION_OPTIONS,
-                is_edit=True,
-                existing_files=current_files,
-                parse_multi_categories=parse_multi_categories,
-            )
+            return render_game_edit_form(draft_game, current_files, return_to)
 
         files_to_remove = set(request.form.getlist("delete_files"))
         remaining_files = [name for name in current_files if name not in files_to_remove]
@@ -840,20 +1063,23 @@ def edit_game(game_id: int):
         )
         db.commit()
         flash("Запись обновлена.", "success")
-        return redirect(url_for("admin_list"))
+        return redirect(return_to)
 
     game_dict = dict(game)
     existing_files = parse_files_json(game["files_json"])
-    return render_template(
-        "game_form.html",
-        game=game_dict,
-        game_types=fetch_game_types(),
-        age_options=fetch_age_categories(),
-        location_options=LOCATION_OPTIONS,
-        is_edit=True,
-        existing_files=existing_files,
-        parse_multi_categories=parse_multi_categories,
-    )
+    return render_game_edit_form(game_dict, existing_files, return_to)
+
+
+@app.route("/my-games/<int:game_id>/edit", methods=("GET", "POST"))
+@game_editor_required
+def edit_game(game_id: int):
+    return handle_game_edit(game_id, url_for("my_games"))
+
+
+@app.route("/admin/<int:game_id>/edit", methods=("GET", "POST"))
+@admin_required
+def admin_edit_game(game_id: int):
+    return handle_game_edit(game_id, url_for("admin_list"))
 
 
 @app.post("/admin/<int:game_id>/delete")
@@ -988,6 +1214,15 @@ def save_age_categories():
     return redirect(url_for("admin_list", tab="properties", property_tab="age-categories"))
 
 
+@app.post("/admin/properties/access-users")
+@admin_required
+def save_access_users():
+    init_db()
+    success, message = apply_bulk_access_updates(request.form)
+    flash(message, "success" if success else "error")
+    return redirect(url_for("admin_list", tab="properties", property_tab="access-users"))
+
+
 @app.post("/admin/age-categories/<int:age_id>/edit")
 @admin_required
 def edit_age_category(age_id: int):
@@ -1044,6 +1279,8 @@ def inject_globals():
         "sortable_fields": SORTABLE_FIELDS,
         "parse_multi_categories": parse_multi_categories,
         "current_user": get_current_user(),
+        "current_user_role": get_current_user_role(),
+        "can_add_games": can_add_games(),
         "is_admin_authenticated": is_admin_authenticated(),
         "google_auth_enabled": is_google_auth_enabled(),
         "versioned_static": versioned_static,

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}Мои игры{% endblock %}
+
+{% block content %}
+  <section class="hero">
+    <div>
+      <p class="eyebrow">Личный раздел</p>
+      <h1>Мои игры</h1>
+      <p class="lead">Здесь собраны записи, которые вы добавили сами. Их можно быстро открыть и отредактировать.</p>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="hero-admin-actions">
+      <a class="hero-action" href="{{ url_for('add_game') }}">Добавить новую запись</a>
+    </div>
+  </section>
+
+  <section class="card-grid">
+    {% for game in games %}
+      <article class="card">
+        <div class="card-header">
+          <h2>{{ game['title'] }}</h2>
+          <div class="tag-list">
+            {% for item in parse_multi_categories(game['game_type']) %}
+              <div>{{ item }}</div>
+            {% endfor %}
+          </div>
+        </div>
+        <dl class="details">
+          <div><dt>Цель</dt><dd>{{ game['goal'] }}</dd></div>
+          <div><dt>Участники</dt><dd>{{ game['participants'] }}</dd></div>
+          <div><dt>Возраст</dt><dd>{{ game['age_category'] }}</dd></div>
+          <div><dt>Длительность</dt><dd>{{ game['duration'] }}</dd></div>
+          <div><dt>Место</dt><dd>{{ game['location'] }}</dd></div>
+          <div><dt>Оборудование</dt><dd>{{ game['equipment'] or 'Оборудование не требуется' }}</dd></div>
+        </dl>
+        <section class="card-text">
+          <h3>Правила</h3>
+          <p>{{ game['rules'] }}</p>
+        </section>
+        <section class="card-files">
+          <h3>Файлы</h3>
+          {% set files = parse_files_json(game['files_json']) %}
+          {% if files %}
+            <ul class="file-list">
+              {% for filename in files %}
+                <li><a href="{{ url_for('uploaded_file', filename=filename) }}" target="_blank" rel="noopener">{{ filename }}</a></li>
+              {% endfor %}
+            </ul>
+          {% else %}
+            <p>Нет прикреплённых файлов.</p>
+          {% endif %}
+        </section>
+        <div class="card-actions">
+          <a class="button-secondary" href="{{ url_for('edit_game', game_id=game['id'], return_to=url_for('my_games')) }}">Редактировать</a>
+        </div>
+      </article>
+    {% else %}
+      <div class="empty-state">
+        <h2>Пока пусто</h2>
+        <p>У вас ещё нет добавленных игр. Создайте первую запись в базе.</p>
+      </div>
+    {% endfor %}
+  </section>
+{% endblock %}

@@ -12,6 +12,9 @@
 
   <section class="panel">
     <form method="post" enctype="multipart/form-data" class="form-grid">
+      {% if return_to %}
+        <input type="hidden" name="return_to" value="{{ return_to }}">
+      {% endif %}
       <label>
         <span>Название <strong class="required-mark">*</strong></span>
         <input type="text" name="title" value="{{ game.get('title', '') }}" required>
@@ -107,7 +110,7 @@
 
       <div class="actions full-width">
         <button type="submit">{% if is_edit %}Сохранить изменения{% else %}Добавить запись{% endif %}</button>
-        <a class="button-secondary" href="{% if is_edit %}{{ url_for('admin_list') }}{% else %}{{ url_for('games_list') }}{% endif %}">Отмена</a>
+        <a class="button-secondary" href="{{ cancel_url or url_for('games_list') }}">Отмена</a>
       </div>
     </form>
   </section>

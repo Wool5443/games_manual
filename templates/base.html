@@ -36,8 +36,11 @@
         <div class="header-menu" id="header-menu">
           <nav class="nav">
             <a href="{{ url_for('games_list') }}">Просмотр базы</a>
-            {% if is_admin_authenticated %}
+            {% if can_add_games %}
+              <a href="{{ url_for('my_games') }}">Мои игры</a>
               <a href="{{ url_for('add_game') }}">Добавить игру</a>
+            {% endif %}
+            {% if is_admin_authenticated %}
               <a href="{{ url_for('admin_list') }}">Админ-панель</a>
             {% endif %}
           </nav>
