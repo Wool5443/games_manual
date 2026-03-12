@@ -555,6 +555,7 @@ small {
   line-height: 1.2;
   transform: none;
   opacity: 1;
+  overflow: hidden;
 }
 
 [data-theme="dark"] .dropdown-multiselect-trigger {
@@ -571,6 +572,8 @@ small {
 .dropdown-multiselect-text {
   display: block;
   flex: 1 1 auto;
+  width: 0;
+  max-width: 100%;
   min-width: 0;
   overflow-x: auto;
   overflow-y: hidden;
