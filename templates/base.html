@@ -57,8 +57,6 @@
           {% if is_admin_authenticated %}
             <a href="{{ url_for('add_game') }}">Добавить игру</a>
             <a href="{{ url_for('admin_list') }}">Админ-панель</a>
-          {% elif google_auth_enabled %}
-            <a href="{{ url_for('login_google', next=url_for('admin_list')) }}">Вход для админа</a>
           {% endif %}
         </nav>
         </div>
