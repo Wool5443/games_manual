@@ -2,9 +2,22 @@
   box-sizing: border-box;
 }
 
+@keyframes soft-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 html {
   background: var(--bg);
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -28,6 +41,7 @@ body {
 
 a {
   color: var(--accent-dark);
+  transition: color 0.2s ease, opacity 0.2s ease;
 }
 
 .container {
@@ -43,6 +57,7 @@ a {
   backdrop-filter: blur(12px);
   background: var(--header-bg);
   border-bottom: 1px solid var(--line);
+  transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .site-header .container,
@@ -110,6 +125,13 @@ a {
   text-decoration: none;
   color: var(--muted);
   font-weight: 600;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.nav a:hover,
+.nav a:focus-visible {
+  color: var(--accent-dark);
+  transform: translateY(-1px);
 }
 
 .header-menu {
@@ -244,6 +266,7 @@ a {
   border-radius: 24px;
   background: var(--hero-bg);
   box-shadow: var(--shadow);
+  animation: soft-rise-in 0.42s ease both;
 }
 
 .hero.compact {
@@ -351,6 +374,8 @@ button:hover,
   box-shadow: var(--shadow);
   padding: 1.3rem;
   margin-bottom: 1.5rem;
+  animation: soft-rise-in 0.42s ease both;
+  animation-delay: 0.05s;
 }
 
 .filters-grid,
@@ -400,6 +425,11 @@ textarea {
   color: var(--text);
   padding: 0.8rem 0.95rem;
   font: inherit;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 input,
@@ -418,6 +448,20 @@ select {
 
 textarea {
   resize: vertical;
+}
+
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: rgba(125, 8, 8, 0.32);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: rgba(125, 8, 8, 0.42);
+  box-shadow: 0 0 0 4px rgba(125, 8, 8, 0.08);
 }
 
 small {
@@ -563,6 +607,11 @@ small {
   transform: none;
   opacity: 1;
   overflow: hidden;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
 }
 
 [data-theme="dark"] .dropdown-multiselect-trigger {
@@ -758,6 +807,14 @@ small {
   margin-bottom: 2rem;
 }
 
+.card-grid .card:nth-child(2n) {
+  animation-delay: 0.04s;
+}
+
+.card-grid .card:nth-child(3n) {
+  animation-delay: 0.08s;
+}
+
 .card {
   background: var(--card-bg);
   border: 1px solid var(--line);
@@ -766,6 +823,8 @@ small {
   box-shadow: var(--shadow);
   min-width: 0;
   position: relative;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
+  animation: soft-rise-in 0.38s ease both;
 }
 
 .card-expandable {
@@ -892,6 +951,9 @@ small {
   background: color-mix(in srgb, var(--panel) 88%, transparent);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .card-modal-toolbar-actions {
@@ -903,6 +965,11 @@ small {
 
 .card-modal-toolbar-actions:empty {
   display: none;
+}
+
+.card-modal.is-open .card-modal-toolbar {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .card-owned {
@@ -1119,6 +1186,7 @@ small {
   background: var(--accent-soft);
   color: var(--accent-dark);
   white-space: nowrap;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-tabs a.is-active {
@@ -1145,11 +1213,19 @@ small {
   color: var(--muted);
   border: 1px solid var(--line);
   white-space: nowrap;
+  transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .admin-subtabs a.is-active {
   color: var(--accent-dark);
   background: var(--accent-soft);
+}
+
+.admin-tabs a:hover,
+.admin-tabs a:focus-visible,
+.admin-subtabs a:hover,
+.admin-subtabs a:focus-visible {
+  transform: translateY(-1px);
 }
 
 .category-form,
@@ -1471,5 +1547,18 @@ small {
   .nav {
     flex-direction: column;
     gap: 0.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
   }
 }
