@@ -52,7 +52,7 @@
               <div class="auth-controls">
                 <span class="auth-user">{{ current_user.get('name') or current_user.get('email') }}</span>
                 <form method="post" action="{{ url_for('logout') }}">
-                  <button type="submit" class="button-secondary auth-button">Выйти</button>
+                  <button type="submit" class="button-secondary auth-button auth-logout-button">Выйти</button>
                 </form>
               </div>
             {% elif google_auth_enabled %}

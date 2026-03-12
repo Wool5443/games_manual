@@ -153,6 +153,12 @@ a {
   flex: 0 0 auto;
 }
 
+.auth-logout-button {
+  padding: 0.42rem 1rem;
+  font-size: 0.88rem;
+  line-height: 1.05;
+}
+
 .auth-google-button {
   order: 99;
   padding: 0.62rem 0.95rem;
@@ -188,7 +194,7 @@ a {
 
 .theme-toggle + .auth-controls,
 .theme-toggle + .auth-button {
-  margin-left: 1.25rem;
+  margin-left: 2rem;
 }
 
 .theme-toggle:hover {
