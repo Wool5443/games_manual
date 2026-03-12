@@ -992,6 +992,8 @@ small {
   display: flex;
   align-items: center;
   gap: 0.7rem;
+  justify-content: flex-start;
+  min-width: max-content;
 }
 
 .table-actions form {

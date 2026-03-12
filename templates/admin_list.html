@@ -160,11 +160,13 @@
                 <td>{{ game['age_category'] }}</td>
                 <td>{{ game['duration'] }}</td>
                 <td>{{ parse_files_json(game['files_json'])|length }}</td>
-                <td class="table-actions">
-                  <a href="{{ url_for('admin_edit_game', game_id=game['id']) }}">Редактировать</a>
-                  <form method="post" action="{{ url_for('delete_game', game_id=game['id']) }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
-                    <button type="submit" class="button-danger">Удалить</button>
-                  </form>
+                <td>
+                  <div class="table-actions">
+                    <a href="{{ url_for('admin_edit_game', game_id=game['id']) }}">Редактировать</a>
+                    <form method="post" action="{{ url_for('delete_game', game_id=game['id']) }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
+                      <button type="submit" class="button-danger">Удалить</button>
+                    </form>
+                  </div>
                 </td>
               </tr>
             {% else %}
