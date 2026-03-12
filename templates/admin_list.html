@@ -107,11 +107,28 @@
             <div class="category-item access-item">
               <input type="hidden" name="item_id" value="{{ access_user['id'] }}">
               <input type="email" name="item_email" value="{{ access_user['email'] }}" placeholder="email@example.com" required>
-              <select name="item_role" aria-label="Роль доступа">
-                {% for role_key, role_label in access_role_labels.items() %}
-                  <option value="{{ role_key }}" {% if access_user['role'] == role_key %}selected{% endif %}>{{ role_label }}</option>
-                {% endfor %}
-              </select>
+              <div class="dropdown-field admin-inline-dropdown">
+                <input type="hidden" name="item_role" value="{{ access_user['role'] }}">
+                <div class="dropdown-multiselect" data-dropdown-single>
+                  <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+                    <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите роль">
+                      {{ access_role_labels.get(access_user['role'], 'Выберите роль') }}
+                    </span>
+                    <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+                  </button>
+                  <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+                    <div class="dropdown-multiselect-list">
+                      {% for role_key, role_label in access_role_labels.items() %}
+                        <label class="dropdown-option">
+                          <input type="radio" name="item_role_choice_{{ access_user['id'] }}" value="{{ role_key }}" {% if access_user['role'] == role_key %}checked{% endif %} data-dropdown-single-option>
+                          <span class="dropdown-option-mark" aria-hidden="true"></span>
+                          <span class="dropdown-option-label">{{ role_label }}</span>
+                        </label>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
               <label class="property-toggle">
                 <input type="checkbox" name="delete_item" value="{{ access_user['id'] }}">
                 <span class="toggle-control" aria-hidden="true"></span>
@@ -184,6 +201,67 @@
 {% block scripts %}
   <script>
     (function () {
+      document.querySelectorAll("[data-dropdown-single]").forEach(function (dropdown) {
+        const trigger = dropdown.querySelector("[data-dropdown-trigger]");
+        const panel = dropdown.querySelector("[data-dropdown-panel]");
+        const label = dropdown.querySelector("[data-dropdown-label]");
+        const options = Array.from(dropdown.querySelectorAll("[data-dropdown-single-option]"));
+        const hiddenInput = dropdown.previousElementSibling && dropdown.previousElementSibling.type === "hidden"
+          ? dropdown.previousElementSibling
+          : null;
+        if (!trigger || !panel || !label || !options.length) return;
+
+        const closeDropdown = function () {
+          dropdown.classList.remove("is-open");
+          trigger.setAttribute("aria-expanded", "false");
+          panel.hidden = true;
+        };
+
+        const openDropdown = function () {
+          dropdown.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+          panel.hidden = false;
+        };
+
+        const updateLabel = function () {
+          const selected = options.find(function (option) { return option.checked; });
+          const value = selected ? selected.value : "";
+          if (hiddenInput) {
+            hiddenInput.value = value;
+          }
+          label.textContent = selected ? selected.closest(".dropdown-option").querySelector(".dropdown-option-label").textContent : label.dataset.placeholder || "Выберите значение";
+        };
+
+        trigger.addEventListener("click", function () {
+          if (dropdown.classList.contains("is-open")) {
+            closeDropdown();
+          } else {
+            openDropdown();
+          }
+        });
+
+        options.forEach(function (option) {
+          option.addEventListener("change", function () {
+            updateLabel();
+            closeDropdown();
+          });
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!dropdown.contains(event.target)) {
+            closeDropdown();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeDropdown();
+          }
+        });
+
+        updateLabel();
+      });
+
       document.querySelectorAll(".admin-import-form").forEach(function (form) {
         const input = form.querySelector(".admin-import-picker input[type='file']");
         if (!input) return;

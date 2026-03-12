@@ -18,14 +18,33 @@
         <input type="text" name="search" value="{{ filters.get('search', '') }}" placeholder="Название, цель, правила...">
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Тип</span>
-        <select name="game_type">
-          <option value="">Любой тип</option>
-          {% for game_type in game_types %}
-            <option value="{{ game_type }}" {% if filters.get('game_type', '') == game_type %}selected{% endif %}>{{ game_type }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" name="game_type" value="{{ filters.get('game_type', '') }}">
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любой тип">
+              {{ filters.get('game_type', '') or 'Любой тип' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              <label class="dropdown-option">
+                <input type="radio" name="game_type_choice" value="" {% if not filters.get('game_type', '') %}checked{% endif %} data-dropdown-single-option>
+                <span class="dropdown-option-mark" aria-hidden="true"></span>
+                <span class="dropdown-option-label">Любой тип</span>
+              </label>
+              {% for game_type in game_types %}
+                <label class="dropdown-option">
+                  <input type="radio" name="game_type_choice" value="{{ game_type }}" {% if filters.get('game_type', '') == game_type %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ game_type }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
       <label>
@@ -43,14 +62,33 @@
         <input type="text" name="participants" value="{{ filters.get('participants', '') }}">
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Возрастная категория</span>
-        <select name="age_category">
-          <option value="">Любая</option>
-          {% for age in age_options %}
-            <option value="{{ age }}" {% if filters.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" name="age_category" value="{{ filters.get('age_category', '') }}">
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любая">
+              {{ filters.get('age_category', '') or 'Любая' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              <label class="dropdown-option">
+                <input type="radio" name="age_category_choice" value="" {% if not filters.get('age_category', '') %}checked{% endif %} data-dropdown-single-option>
+                <span class="dropdown-option-mark" aria-hidden="true"></span>
+                <span class="dropdown-option-label">Любая</span>
+              </label>
+              {% for age in age_options %}
+                <label class="dropdown-option">
+                  <input type="radio" name="age_category_choice" value="{{ age }}" {% if filters.get('age_category', '') == age %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ age }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
       <label>
@@ -58,14 +96,33 @@
         <input type="text" name="duration" value="{{ filters.get('duration', '') }}">
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Место проведения</span>
-        <select name="location">
-          <option value="">Любое</option>
-          {% for location in location_options %}
-            <option value="{{ location }}" {% if filters.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" name="location" value="{{ filters.get('location', '') }}">
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любое">
+              {{ filters.get('location', '') or 'Любое' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              <label class="dropdown-option">
+                <input type="radio" name="location_choice" value="" {% if not filters.get('location', '') %}checked{% endif %} data-dropdown-single-option>
+                <span class="dropdown-option-mark" aria-hidden="true"></span>
+                <span class="dropdown-option-label">Любое</span>
+              </label>
+              {% for location in location_options %}
+                <label class="dropdown-option">
+                  <input type="radio" name="location_choice" value="{{ location }}" {% if filters.get('location', '') == location %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ location }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
       <label class="equipment-filter">
@@ -95,21 +152,55 @@
         <input type="text" name="files_json" value="{{ filters.get('files_json', '') }}" placeholder="Имя файла">
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Сортировка</span>
-        <select name="sort">
-          {% for field, label in sortable_fields.items() %}
-            <option value="{{ field }}" {% if sort == field %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
+        <input type="hidden" name="sort" value="{{ sort }}">
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите сортировку">
+              {{ sortable_fields.get(sort, 'Выберите сортировку') }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              {% for field, label in sortable_fields.items() %}
+                <label class="dropdown-option">
+                  <input type="radio" name="sort_choice" value="{{ field }}" {% if sort == field %}checked{% endif %} data-dropdown-single-option>
+                  <span class="dropdown-option-mark" aria-hidden="true"></span>
+                  <span class="dropdown-option-label">{{ label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
       </label>
 
-      <label>
+      <label class="dropdown-field">
         <span>Порядок</span>
-        <select name="order">
-          <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
-          <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
-        </select>
+        <input type="hidden" name="order" value="{{ order }}">
+        <div class="dropdown-multiselect" data-dropdown-single>
+          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
+            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите порядок">
+              {{ 'По убыванию' if order == 'desc' else 'По возрастанию' }}
+            </span>
+            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
+          </button>
+          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
+            <div class="dropdown-multiselect-list">
+              <label class="dropdown-option">
+                <input type="radio" name="order_choice" value="asc" {% if order == 'asc' %}checked{% endif %} data-dropdown-single-option>
+                <span class="dropdown-option-mark" aria-hidden="true"></span>
+                <span class="dropdown-option-label">По возрастанию</span>
+              </label>
+              <label class="dropdown-option">
+                <input type="radio" name="order_choice" value="desc" {% if order == 'desc' %}checked{% endif %} data-dropdown-single-option>
+                <span class="dropdown-option-mark" aria-hidden="true"></span>
+                <span class="dropdown-option-label">По убыванию</span>
+              </label>
+            </div>
+          </div>
+        </div>
       </label>
 
       <div class="actions filter-actions">
@@ -190,6 +281,67 @@
 {% block scripts %}
   <script>
     (function () {
+      document.querySelectorAll("[data-dropdown-single]").forEach(function (dropdown) {
+        const trigger = dropdown.querySelector("[data-dropdown-trigger]");
+        const panel = dropdown.querySelector("[data-dropdown-panel]");
+        const label = dropdown.querySelector("[data-dropdown-label]");
+        const options = Array.from(dropdown.querySelectorAll("[data-dropdown-single-option]"));
+        const hiddenInput = dropdown.previousElementSibling && dropdown.previousElementSibling.type === "hidden"
+          ? dropdown.previousElementSibling
+          : null;
+        if (!trigger || !panel || !label || !options.length) return;
+
+        const closeDropdown = function () {
+          dropdown.classList.remove("is-open");
+          trigger.setAttribute("aria-expanded", "false");
+          panel.hidden = true;
+        };
+
+        const openDropdown = function () {
+          dropdown.classList.add("is-open");
+          trigger.setAttribute("aria-expanded", "true");
+          panel.hidden = false;
+        };
+
+        const updateLabel = function () {
+          const selected = options.find(function (option) { return option.checked; });
+          const value = selected ? selected.value : "";
+          if (hiddenInput) {
+            hiddenInput.value = value;
+          }
+          label.textContent = selected ? selected.closest(".dropdown-option").querySelector(".dropdown-option-label").textContent : label.dataset.placeholder || "Выберите значение";
+        };
+
+        trigger.addEventListener("click", function () {
+          if (dropdown.classList.contains("is-open")) {
+            closeDropdown();
+          } else {
+            openDropdown();
+          }
+        });
+
+        options.forEach(function (option) {
+          option.addEventListener("change", function () {
+            updateLabel();
+            closeDropdown();
+          });
+        });
+
+        document.addEventListener("click", function (event) {
+          if (!dropdown.contains(event.target)) {
+            closeDropdown();
+          }
+        });
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "Escape") {
+            closeDropdown();
+          }
+        });
+
+        updateLabel();
+      });
+
       const modal = document.getElementById("card-modal");
       const modalContent = document.getElementById("card-modal-content");
       const modalDialog = modal ? modal.querySelector(".card-modal-dialog") : null;
@@ -199,7 +351,6 @@
       let activeCard = null;
       let activeGhost = null;
       let isAnimating = false;
-      let revealTimer = null;
       let cleanupTimer = null;
 
       const cleanupGhost = function () {
@@ -210,10 +361,6 @@
       };
 
       const clearTimers = function () {
-        if (revealTimer) {
-          window.clearTimeout(revealTimer);
-          revealTimer = null;
-        }
         if (cleanupTimer) {
           window.clearTimeout(cleanupTimer);
           cleanupTimer = null;
@@ -224,8 +371,8 @@
         if (isAnimating) return;
         clearTimers();
         modal.classList.remove("is-open");
+        modal.classList.remove("is-preparing");
         modal.classList.remove("is-animating");
-        modal.classList.remove("is-revealing");
         document.body.classList.remove("modal-open");
         cleanupGhost();
         if (activeCard) {
@@ -258,7 +405,7 @@
         const sourceRect = card.getBoundingClientRect();
         modal.hidden = false;
         document.body.classList.add("modal-open");
-        modal.classList.add("is-open", "is-animating");
+        modal.classList.add("is-preparing", "is-animating");
 
         const ghost = card.cloneNode(true);
         ghost.classList.remove("card-expandable");
@@ -287,24 +434,17 @@
           });
         });
 
-        revealTimer = window.setTimeout(function () {
-          modal.classList.add("is-revealing");
-          if (activeGhost) {
-            activeGhost.classList.add("is-fading");
-          }
-        }, 250);
-
         cleanupTimer = window.setTimeout(function () {
+          modal.classList.remove("is-preparing");
           modal.classList.remove("is-animating");
-          modal.classList.remove("is-revealing");
+          modal.classList.add("is-open");
           cleanupGhost();
           if (activeCard) {
             activeCard.classList.remove("is-expanding");
           }
           isAnimating = false;
-          revealTimer = null;
           cleanupTimer = null;
-        }, 430);
+        }, 340);
       };
 
       cards.forEach(function (card) {

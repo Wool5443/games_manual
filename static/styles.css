@@ -542,6 +542,8 @@ small {
 
 .dropdown-multiselect {
   position: relative;
+  width: 100%;
+  min-width: 0;
 }
 
 .dropdown-multiselect-trigger {
@@ -798,9 +800,24 @@ small {
   display: none;
 }
 
+.card-modal.is-preparing {
+  pointer-events: none;
+}
+
 .card-modal.is-open,
 .card-modal.is-animating {
   pointer-events: auto;
+}
+
+.card-modal.is-preparing .card-modal-backdrop {
+  opacity: 0;
+  transition: none;
+}
+
+.card-modal.is-preparing .card-modal-dialog {
+  opacity: 0;
+  transform: none;
+  transition: none;
 }
 
 .card-modal-backdrop {
@@ -830,11 +847,6 @@ small {
   opacity: 0;
   transform: none;
   transition: none;
-}
-
-.card-modal.is-revealing .card-modal-dialog {
-  opacity: 1;
-  transform: translateY(0) scale(1);
 }
 
 .card-modal.is-open .card-modal-backdrop {
@@ -871,10 +883,6 @@ small {
     border-radius 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
     opacity 0.18s ease;
-}
-
-.card-modal-ghost.is-fading {
-  opacity: 0;
 }
 
 .card-modal-close {
@@ -1150,6 +1158,15 @@ small {
 .category-item select {
   flex: 0 0 220px;
   min-width: 0;
+}
+
+.category-item .admin-inline-dropdown {
+  flex: 0 0 220px;
+  min-width: 0;
+}
+
+.admin-inline-dropdown .dropdown-multiselect-panel {
+  z-index: 40;
 }
 
 .property-bulk-form {
