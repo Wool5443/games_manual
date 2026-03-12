@@ -27,7 +27,7 @@
           <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
             <span class="dropdown-multiselect-text" data-dropdown-label>
               {% if selected_types %}
-                {{ selected_types|join(', ') }}
+                {{ selected_types[0] }}{% if selected_types|length > 1 %}, ...{% endif %}
               {% else %}
                 Выберите типы
               {% endif %}
@@ -157,7 +157,9 @@
           const selected = options
             .filter(function (option) { return option.checked; })
             .map(function (option) { return option.value; });
-          label.textContent = selected.length ? selected.join(", ") : "Выберите типы";
+          label.textContent = selected.length
+            ? selected[0] + (selected.length > 1 ? ", ..." : "")
+            : "Выберите типы";
         };
 
         trigger.addEventListener("click", function () {
