@@ -8,6 +8,7 @@ from functools import wraps
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, abort, flash, g, redirect, render_template, request, send_file, send_from_directory, session, url_for
 from werkzeug.utils import secure_filename
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 
 from pathlib import Path
@@ -161,6 +162,9 @@ GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "").strip()
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "").strip()
 ADMIN_EMAILS = {email.strip().casefold() for email in os.getenv("ADMIN_EMAILS", "").split(",") if email.strip()}
 GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
+PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1)
 
 oauth = OAuth(app)
 if GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET:
@@ -430,6 +434,13 @@ def safe_redirect_target(raw_target: str | None) -> str:
     return url_for("admin_list")
 
 
+def get_google_redirect_uri() -> str:
+    callback_path = url_for("google_callback")
+    if PUBLIC_BASE_URL:
+        return f"{PUBLIC_BASE_URL}{callback_path}"
+    return url_for("google_callback", _external=True)
+
+
 def admin_required(view_func):
     @wraps(view_func)
     def wrapped_view(*args, **kwargs):
@@ -659,7 +670,7 @@ def login_google():
         session["auth_next"] = next_target
 
     google = oauth.create_client("google")
-    redirect_uri = url_for("google_callback", _external=True)
+    redirect_uri = get_google_redirect_uri()
     return google.authorize_redirect(redirect_uri)
 
 

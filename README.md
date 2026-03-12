@@ -32,12 +32,14 @@ docker compose up -d --build
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 ADMIN_EMAILS=user1@example.com,user2@example.com
+PUBLIC_BASE_URL=https://your-domain.example
 ```
 
 В настройках OAuth-клиента Google добавьте redirect URI:
 
 ```text
 http://127.0.0.1:5000/auth/google/callback
+https://your-domain.example/auth/google/callback
 ```
 
 Если приложение доступно на другом домене или порту, используйте этот адрес в redirect URI.
