@@ -3,6 +3,7 @@ import sqlite3
 from flask import Flask, g
 
 from .config import DATABASE_PATH, DEFAULT_AGE_OPTIONS, DEFAULT_GAME_TYPES, SCHEMA
+from .demo_data import seed_demo_games
 
 
 def register_db(app: Flask) -> None:
@@ -25,6 +26,9 @@ def close_db(_error: Exception | None) -> None:
 
 def init_db() -> None:
     db = get_db()
+    new_games_table = db.execute(
+        "SELECT 1 FROM sqlite_master WHERE type = 'table' AND name = 'games'"
+    ).fetchone() is None
     db.executescript(SCHEMA)
     game_columns = {
         row[1]
@@ -43,6 +47,8 @@ def init_db() -> None:
         for name in DEFAULT_AGE_OPTIONS:
             db.execute("INSERT OR IGNORE INTO age_categories (name) VALUES (?)", (name,))
     db.commit()
+    if new_games_table:
+        seed_demo_games(db)
 
 
 def fetch_game_types() -> list[str]:
