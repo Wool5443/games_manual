@@ -1,0 +1,50 @@
+/* Desktop links and the existing mobile menu. */
+.header-menu,
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+}
+.header-menu { margin-left: auto; gap: 1rem; }
+.nav { flex-wrap: wrap; }
+.nav a {
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+.nav a:hover,
+.nav a:focus-visible { color: var(--text); background: var(--panel-hover); }
+
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.menu-toggle span:not(.toggle-text) {
+  width: 20px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+}
+.toggle-text { font-size: 0.7rem; }
+
+@media (max-width: 860px) {
+  .menu-toggle { display: inline-flex; margin-left: auto; }
+  .header-menu {
+    display: none;
+    width: 100%;
+    margin-left: 0;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .header-menu.is-open { display: flex; }
+  .nav { flex-direction: column; align-items: stretch; }
+  .nav a { padding: 0.75rem; }
+}

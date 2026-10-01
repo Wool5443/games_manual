@@ -1,0 +1,18 @@
+/* Game administration table and sorting controls. */
+.admin-table-wrapper { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+.admin-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.admin-table th,
+.admin-table td { padding: 1rem; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.admin-table th { background: var(--panel-strong); color: var(--muted); font-size: 0.8rem; font-weight: 600; }
+.admin-table tbody tr:last-child td { border-bottom: 0; }
+.admin-table tbody tr:hover { background: var(--panel-strong); }
+.table-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem; min-width: max-content; }
+.table-actions form { margin: 0; }
+.admin-games-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem; }
+.admin-games-sort-field { min-width: min(100%, 18rem); max-width: 100%; }
+
+@media (max-width: 720px) {
+  .table-actions { flex-direction: column; align-items: stretch; }
+  .admin-table th,
+  .admin-table td { padding: 0.75rem; }
+}

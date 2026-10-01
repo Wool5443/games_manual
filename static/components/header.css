@@ -1,0 +1,65 @@
+/* Site header, brand, and account controls. */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+
+.site-header .container,
+.brand,
+.header-tools,
+.auth-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.site-header .container {
+  padding: 1rem 0;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.brand {
+  flex-shrink: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  text-decoration: none;
+}
+
+.brand-badge { width: 1.4rem; flex: 0 0 auto; }
+.brand-badge svg { display: block; width: 100%; overflow: visible; }
+.brand-badge path {
+  fill: none;
+  stroke: var(--accent-dark);
+  stroke-width: 4;
+  vector-effect: non-scaling-stroke;
+}
+
+.header-tools { margin-left: auto; }
+.auth-user {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.auth-controls form { margin: 0; }
+
+@media (max-width: 1000px) and (min-width: 861px) {
+  .site-header .container { gap: 0.75rem; }
+  .auth-controls { flex-wrap: wrap; justify-content: flex-end; }
+}
+
+@media (max-width: 860px) {
+  .site-header .container { flex-wrap: wrap; gap: 0.75rem; }
+  .header-tools { margin-left: 0; order: -1; }
+  .auth-controls { flex-wrap: wrap; }
+}

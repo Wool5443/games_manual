@@ -1,0 +1,39 @@
+/* Form grids, field labels, and filter layout. */
+.filters-grid,
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+.filters-grid > *,
+.form-grid > * { min-width: 0; }
+.filters-grid > label > span { display: flex; align-items: center; min-height: 2rem; }
+label,
+fieldset { display: grid; gap: 0.6rem; font-weight: 600; }
+label > span,
+legend { font-size: 0.9rem; }
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+legend { padding: 0 0.4rem; }
+.equipment-filter { display: grid; gap: 0.6rem; font-weight: 600; }
+.equipment-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-height: 1.4rem;
+}
+.equipment-filter-header > label { font-size: 0.9rem; }
+.filter-actions { align-self: end; }
+
+@media (max-width: 480px) {
+  .filters-grid,
+  .form-grid { gap: 1rem; }
+}

@@ -1,0 +1,31 @@
+/* Administration tabs and property subtabs. */
+.admin-tabs,
+.admin-subtabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  padding: 0.25rem;
+  overflow-x: auto;
+  scrollbar-color: var(--line-strong) var(--panel);
+}
+.admin-tabs a,
+.admin-subtabs a {
+  padding: 0.65rem 1rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color var(--duration) var(--ease), background var(--duration) var(--ease), border-color var(--duration) var(--ease);
+}
+.admin-tabs a:hover,
+.admin-subtabs a:hover { background: var(--panel-strong); color: var(--text); }
+.admin-tabs a.is-active,
+.admin-subtabs a.is-active { background: var(--accent-soft); color: var(--accent-dark); border-color: var(--line-strong); }
+
+@media (max-width: 480px) {
+  .admin-tabs a,
+  .admin-subtabs a { padding: 0.65rem 0.75rem; }
+}

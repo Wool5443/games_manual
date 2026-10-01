@@ -1,0 +1,5 @@
+/* Empty catalogs, lists, and table rows. */
+.empty-state,
+.empty-row { padding: 2.5rem 1rem; color: var(--muted); text-align: center; }
+.empty-state { grid-column: 1 / -1; border: 1px dashed var(--line-strong); border-radius: var(--radius-lg); }
+.empty-state h2 { color: var(--text); font-size: 1.25rem; }

@@ -1,0 +1,48 @@
+/* Native checkbox switch; its value and form submission remain unchanged. */
+.switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 2rem;
+  min-width: 0;
+  font-weight: 400;
+  cursor: pointer;
+}
+.switch-input {
+  appearance: none;
+  position: relative;
+  width: 2.6rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-pill);
+  background: var(--panel-strong);
+  cursor: pointer;
+  transition: background var(--duration) var(--ease), border-color var(--duration) var(--ease);
+}
+.switch-input::before {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: var(--radius-pill);
+  background: var(--muted);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+.switch-input:checked { background: var(--accent); border-color: var(--accent); }
+.switch-input:checked::before { transform: translateX(1.1rem); background: var(--on-accent); }
+.switch-input:hover:not(:disabled) { border-color: var(--accent-dark); }
+.switch-input:focus-visible { box-shadow: var(--focus-ring); }
+.switch-input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (forced-colors: active) {
+  .switch-input { forced-color-adjust: none; background: Canvas; border-color: ButtonText; }
+  .switch-input::before { background: ButtonText; box-shadow: none; }
+  .switch-input:checked { background: Highlight; border-color: Highlight; }
+  .switch-input:checked::before { background: HighlightText; }
+}

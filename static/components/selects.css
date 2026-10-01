@@ -1,0 +1,28 @@
+/* Styled select fields with the native browser popup and keyboard behavior. */
+select {
+  appearance: none;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 0.7rem 2.7rem 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background-color: var(--panel-strong);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%23ff929d' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9rem center;
+  background-size: 1rem;
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+select:hover:not(:disabled) { border-color: var(--line-strong); }
+select:focus-visible { border-color: var(--accent-dark); box-shadow: var(--focus-ring); }
+select:disabled { opacity: 0.55; cursor: not-allowed; }
+
+@media (forced-colors: active) {
+  select { appearance: auto; background-image: none; }
+}

@@ -71,8 +71,8 @@
       <div class="equipment-filter">
         <div class="equipment-filter-header">
           <label for="equipment-filter">Оборудование</label>
-          <label class="checkbox-row">
-            <input type="checkbox" name="no_equipment" aria-label="Без оборудования" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
+          <label class="switch-row">
+            <input class="switch-input" type="checkbox" role="switch" name="no_equipment" aria-label="Без оборудования" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
             <span>Нет</span>
           </label>
         </div>

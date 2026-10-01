@@ -1,0 +1,14 @@
+/* Flash notifications. */
+.flash-list { margin-top: 1.25rem; }
+.flash {
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid currentColor;
+  border-radius: var(--radius);
+  background: var(--panel);
+  box-shadow: var(--shadow-sm);
+}
+.flash-success { color: var(--success); }
+.flash-warning { color: var(--warning); }
+.flash-error { color: var(--danger); }

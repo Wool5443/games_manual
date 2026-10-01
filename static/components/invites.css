@@ -1,0 +1,20 @@
+/* Access invitations and sharing links. */
+.invite-panel { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid var(--line); }
+.invite-panel-header,
+.invite-actions,
+.invite-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem; }
+.invite-panel-header { justify-content: space-between; margin-bottom: 1rem; }
+.invite-panel-header h3 { margin: 0 0 0.5rem; }
+.invite-list,
+.invite-item { display: grid; gap: 1rem; }
+.invite-item { min-width: 0; padding: 1.25rem; background: var(--panel-strong); border: 1px solid var(--line); border-radius: var(--radius); }
+.invite-meta { color: var(--muted); font-size: 0.9rem; }
+.invite-meta strong { color: var(--text); }
+.invite-actions form,
+.invite-item form { margin: 0; }
+
+@media (max-width: 480px) {
+  .invite-panel-header,
+  .invite-actions { align-items: stretch; flex-direction: column; }
+  .invite-actions button { width: 100%; }
+}

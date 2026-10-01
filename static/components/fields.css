@@ -1,0 +1,25 @@
+/* Text fields; checkboxes, switches, and selects own their styling. */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]),
+textarea {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: 0.7rem 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
+  color: var(--text);
+  font: inherit;
+  font-weight: 400;
+  transition: border-color var(--duration) var(--ease), box-shadow var(--duration) var(--ease);
+}
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):hover,
+textarea:hover { border-color: var(--line-strong); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):focus-visible,
+textarea:focus-visible { border-color: var(--accent-dark); box-shadow: var(--focus-ring); }
+input::placeholder,
+textarea::placeholder { color: var(--muted); opacity: 0.8; }
+textarea { resize: vertical; line-height: 1.6; }
+input:disabled,
+textarea:disabled { opacity: 0.55; cursor: not-allowed; }
+input[readonly] { color: var(--muted); }

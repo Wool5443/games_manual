@@ -7,8 +7,13 @@
     <link rel="icon" type="image/svg+xml" href="{{ versioned_static('favicon.svg') }}">
     <link rel="stylesheet" href="{{ versioned_static('palette.css') }}">
     <link rel="stylesheet" href="{{ versioned_static('styles.css') }}">
-    <link rel="stylesheet" href="{{ versioned_static('forms.css') }}">
-    <link rel="stylesheet" href="{{ versioned_static('cards.css') }}">
+    {% for component in [
+      'header', 'navigation', 'buttons', 'hero', 'panels',
+      'form-layout', 'fields', 'checkboxes', 'switches', 'selects', 'file-upload',
+      'cards', 'dialog', 'tabs', 'tables', 'notices', 'properties', 'invites', 'empty-states'
+    ] %}
+      <link rel="stylesheet" href="{{ versioned_static('components/' ~ component ~ '.css') }}">
+    {% endfor %}
   </head>
   <body>
     <header class="site-header">

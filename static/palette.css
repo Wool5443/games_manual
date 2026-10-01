@@ -1,16 +1,37 @@
+/* Shared design tokens. */
 :root {
   color-scheme: dark;
-  --bg: #1a1011;
-  --panel: #281819;
-  --panel-strong: #3a2224;
-  --text: #f5e8e4;
-  --muted: #c8a9a2;
-  --line: #68494b;
-  --accent: #d64b4b;
-  --accent-dark: #f07a7a;
-  --accent-soft: #482729;
-  --success: #79c08a;
-  --warning: #f0c36d;
-  --danger: #f07a7a;
-  --radius: 6px;
+  --bg: #181315;
+  --panel: #231b1e;
+  --panel-strong: #2e2327;
+  --panel-hover: #37292e;
+  --text: #f8eeeb;
+  --muted: #c5b0b4;
+  --line: #4a363d;
+  --line-strong: #79525c;
+  --accent: #b93645;
+  --accent-hover: #cf4050;
+  --accent-dark: #ff929d;
+  --accent-soft: #3e242c;
+  --success: #91d5a2;
+  --warning: #f4cd83;
+  --danger: #ff929d;
+  --on-accent: #ffffff;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --radius-lg: 20px;
+  --radius-pill: 999px;
+  --control-height: 46px;
+  --content-width: 1200px;
+  --surface-padding: clamp(1rem, 2.5vw, 1.75rem);
+  --shadow-sm: 0 4px 14px rgb(0 0 0 / 12%);
+  --shadow: 0 12px 32px rgb(0 0 0 / 18%);
+  --shadow-dialog: 0 24px 80px rgb(0 0 0 / 45%);
+  --focus-ring: 0 0 0 3px rgb(255 146 157 / 18%);
+  --duration: 160ms;
+  --ease: ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration: 0s; }
 }

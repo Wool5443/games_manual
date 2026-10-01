@@ -1,0 +1,32 @@
+/* Native game dialog and its sticky toolbar. */
+.card-modal {
+  width: min(1080px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: var(--surface-padding);
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-dialog);
+  overflow: auto;
+}
+.card-modal::backdrop { background: rgb(9 6 8 / 78%); }
+.card-modal-toolbar {
+  position: sticky;
+  top: calc(-1 * var(--surface-padding));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: calc(-1 * var(--surface-padding)) calc(-1 * var(--surface-padding)) 1.25rem;
+  padding: 1rem var(--surface-padding);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  z-index: 1;
+}
+.card-modal-toolbar-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; min-width: 0; }
+.card-modal-toolbar-actions:empty { display: none; }
+.card-modal-close { margin-left: auto; }
+.modal-open { overflow: hidden; }

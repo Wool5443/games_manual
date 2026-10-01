@@ -1,0 +1,10 @@
+/* Content surfaces. */
+.panel {
+  margin-bottom: 1.5rem;
+  padding: var(--surface-padding);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  min-width: 0;
+}

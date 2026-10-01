@@ -1,0 +1,57 @@
+/* File dropzone, selected attachments, and admin import pickers. */
+.file-dropzone {
+  padding: 1.25rem;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--panel-strong);
+  transition: border-color var(--duration) var(--ease), background var(--duration) var(--ease);
+}
+.file-dropzone.is-dragover { border-color: var(--accent-dark); background: var(--accent-soft); }
+.file-dropzone-inner,
+.selected-files li,
+.existing-files,
+.admin-import-form {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+.file-dropzone-inner,
+.selected-files li { justify-content: space-between; }
+.file-dropzone-copy { display: grid; gap: 0.25rem; min-width: 0; }
+.file-dropzone-copy span,
+.selected-files { color: var(--muted); font-weight: 400; }
+
+/* Keep native file pickers available to keyboard and assistive technology. */
+.file-input,
+.admin-import-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  border: 0;
+}
+.file-dropzone:focus-within,
+.admin-import-picker:focus-within { outline: 2px solid var(--accent-dark); outline-offset: 3px; }
+.admin-import-picker { display: inline-flex; cursor: pointer; }
+.selected-files { margin: 1rem 0 0; padding: 0; list-style: none; }
+.selected-files li + li { margin-top: 0.75rem; }
+.selected-files span { overflow-wrap: anywhere; min-width: 0; flex: 1; }
+.selected-file-remove {
+  min-height: 2.25rem;
+  padding: 0.35rem 0.65rem;
+  border-color: var(--line);
+  background: transparent;
+  color: var(--danger);
+  box-shadow: none;
+}
+.selected-file-remove:hover { background: var(--accent-soft); border-color: var(--danger); }
+
+@media (max-width: 720px) {
+  .selected-files li,
+  .file-dropzone-inner,
+  .admin-import-form { flex-direction: column; align-items: stretch; }
+}

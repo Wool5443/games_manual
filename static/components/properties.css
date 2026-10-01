@@ -1,0 +1,23 @@
+/* Editable property rows and bulk administration forms. */
+.category-list,
+.property-bulk-form { display: grid; gap: 1rem; }
+.category-item {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+.category-item input:not([type="checkbox"]):not([type="hidden"]) { flex: 1 1 240px; }
+.category-item select { flex: 1 1 180px; }
+.category-item .checkbox-row { flex-shrink: 0; }
+.property-help { margin: 0 0 1rem; color: var(--muted); max-width: 64ch; }
+
+@media (max-width: 720px) {
+  .category-item input:not([type="checkbox"]):not([type="hidden"]),
+  .category-item select { flex-basis: 100%; }
+}
