@@ -1,201 +1,72 @@
-/* Game cards and their expanded modal. */
-
+/* Game cards and the native detail dialog. */
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr));
   gap: 1rem;
   margin-bottom: 2rem;
 }
 
-.card-grid .card:nth-child(2n) {
-  animation-delay: 0.04s;
-}
-
-.card-grid .card:nth-child(3n) {
-  animation-delay: 0.08s;
-}
-
 .card {
-  background: var(--card-bg);
-  border: 1px solid var(--line);
-  border-radius: 22px;
-  padding: 1.15rem;
-  box-shadow: var(--shadow);
   min-width: 0;
-  position: relative;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background-color 0.22s ease;
-  animation: soft-rise-in 0.38s ease both;
+  padding: 1rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow-wrap: anywhere;
 }
 
 .card-expandable {
   cursor: pointer;
-  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .card-expandable:hover,
-.card-expandable:focus-visible {
-  transform: translateY(-2px);
-  box-shadow: 0 20px 40px rgba(31, 26, 23, 0.14);
-  border-color: rgba(125, 8, 8, 0.28);
-}
-
-.card-expandable.is-expanding {
-  opacity: 0;
-  transform: none;
+.card-owned {
+  border-color: var(--accent-dark);
 }
 
 .card-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 120;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4vh 4vw;
-  pointer-events: none;
-}
-
-.card-modal[hidden] {
-  display: none;
-}
-
-.card-modal.is-preparing {
-  pointer-events: none;
-}
-
-.card-modal.is-open,
-.card-modal.is-animating {
-  pointer-events: auto;
-}
-
-.card-modal.is-preparing .card-modal-backdrop {
-  opacity: 0;
-  transition: none;
-  background: rgba(31, 26, 23, 0);
-  backdrop-filter: blur(0);
-}
-
-.card-modal.is-preparing .card-modal-dialog {
-  opacity: 0;
-  transform: none;
-  transition: none;
-}
-
-.card-modal.is-finalizing .card-modal-backdrop,
-.card-modal.is-finalizing .card-modal-dialog {
-  transition: none;
-}
-
-.card-modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(31, 26, 23, 0.56);
-  backdrop-filter: blur(0);
-  opacity: 0;
-  transition: opacity 0.32s ease, backdrop-filter 0.32s ease, background-color 0.32s ease;
-}
-
-.card-modal-dialog {
-  position: relative;
-  width: min(92vw, 1080px);
-  max-height: 92vh;
-  overflow: auto;
-  padding: 1.1rem;
-  border-radius: 28px;
+  width: min(1080px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 1rem;
   background: var(--panel);
-  box-shadow: 0 32px 80px rgba(16, 11, 9, 0.3);
-  transform: translateY(20px) scale(0.96);
-  opacity: 0;
-  transition: transform 0.24s ease;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: auto;
 }
 
-.card-modal.is-animating .card-modal-dialog {
-  opacity: 0;
-  transform: none;
-  transition: none;
-}
-
-.card-modal.is-open .card-modal-backdrop,
-.card-modal.is-animating .card-modal-backdrop {
-  opacity: 1;
-  backdrop-filter: blur(6px);
-  background: rgba(31, 26, 23, 0.56);
-}
-
-.card-modal.is-open .card-modal-dialog {
-  transform: translateY(0) scale(1);
-  opacity: 1;
-}
-
-.card-modal-content .card {
-  min-height: min(78vh, 54rem);
-  box-shadow: none;
-  border-radius: 24px;
+.card-modal::backdrop {
+  background: rgba(0, 0, 0, 0.65);
 }
 
 .card-modal-toolbar {
   position: sticky;
-  top: 0;
-  z-index: 3;
+  top: -1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.9rem;
-  margin: -1.1rem -1.1rem 1rem;
-  padding: 1.1rem;
-  background: color-mix(in srgb, var(--panel) 88%, transparent);
-  backdrop-filter: blur(10px);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: -1rem -1rem 1rem;
+  padding: 1rem;
+  background: var(--panel);
   border-bottom: 1px solid var(--line);
-  opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .card-modal-toolbar-actions {
   display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.card-modal-toolbar-actions:empty {
+.card-modal-toolbar-actions:empty,
+.card-overlay-actions {
   display: none;
 }
 
-.card-modal.is-open .card-modal-toolbar {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.card-owned {
-  border-color: rgba(125, 8, 8, 0.28);
-}
-
-.card-modal-ghost {
-  position: fixed;
-  margin: 0;
-  z-index: 121;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 1;
-  transition:
-    top 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    left 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    width 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    height 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    border-radius 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    box-shadow 0.32s cubic-bezier(0.2, 0.8, 0.2, 1),
-    opacity 0.18s ease;
-}
-
-.card-modal-ghost.is-expanding {
-  box-shadow: 0 32px 80px rgba(16, 11, 9, 0.3);
-}
-
 .card-modal-close {
-  position: static;
-  margin: 0 0 0 auto;
-  z-index: auto;
+  margin-left: auto;
 }
 
 .modal-open {
@@ -204,48 +75,16 @@
 
 .card-header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  align-items: flex-start;
-  min-width: 0;
 }
 
 .card-heading {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
+  display: grid;
+  gap: 0.5rem;
   min-width: 0;
-  flex: 1 1 auto;
-}
-
-.card-owned-badge {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 0.2rem 0.55rem;
-  border-radius: 999px;
-  background: var(--accent-soft);
-  color: var(--accent-dark);
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-}
-
-.tag-list {
-  flex: 0 1 55%;
-  width: auto;
-  max-width: 55%;
-  min-width: 0;
-  margin-left: auto;
-  align-self: flex-start;
-  color: var(--accent-dark);
-  font-size: 0.9rem;
-  font-weight: 700;
-  white-space: normal;
-  word-break: normal;
-  overflow-wrap: break-word;
-  hyphens: auto;
-  text-align: right;
+  flex: 1;
 }
 
 .card-header h2,
@@ -253,40 +92,39 @@
   margin: 0;
 }
 
-.card-header h2 {
-  flex: 1 1 auto;
+.card-owned-badge {
+  justify-self: start;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+  color: var(--accent-dark);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.tag-list {
+  max-width: 55%;
   min-width: 0;
-}
-
-.card-overlay-actions {
-  display: none;
-}
-
-.card-modal-toolbar .button-secondary {
-  padding: 0.5rem 0.85rem;
-}
-
-.tag-list > div {
-  display: block;
-  max-width: 100%;
-  hyphens: auto;
+  color: var(--accent-dark);
+  font-size: 0.9rem;
+  text-align: right;
 }
 
 .details {
-  margin: 1rem 0;
   display: grid;
-  gap: 0.65rem;
+  gap: 0.5rem;
+  margin: 1rem 0;
 }
 
 .details div {
   border-top: 1px solid var(--line);
-  padding-top: 0.65rem;
+  padding-top: 0.5rem;
 }
 
 .details dt {
+  margin-bottom: 0.25rem;
   color: var(--muted);
   font-size: 0.85rem;
-  margin-bottom: 0.2rem;
 }
 
 .details dd {
@@ -299,27 +137,24 @@
 }
 
 .card-actions {
-  margin-top: 1rem;
   display: flex;
-  justify-content: flex-start;
-  gap: 0.75rem;
   flex-wrap: wrap;
-}
-
-.card-detail {
-  min-height: auto;
+  gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .file-list {
   margin: 0;
-  padding-left: 1.1rem;
+  padding-left: 1rem;
 }
 
 @media (max-width: 720px) {
+  .card-header {
+    flex-direction: column;
+  }
+
   .tag-list {
     max-width: 100%;
-    width: 100%;
-    margin-left: 0;
     text-align: left;
   }
 }

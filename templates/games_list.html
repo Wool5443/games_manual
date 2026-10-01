@@ -153,16 +153,13 @@
     {% endfor %}
   </section>
 
-  <div class="card-modal" id="card-modal" hidden>
-    <div class="card-modal-backdrop" data-card-modal-close></div>
-    <div class="card-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="card-modal-title">
-      <div class="card-modal-toolbar">
-        <div class="card-modal-toolbar-actions" id="card-modal-toolbar-actions"></div>
-        <button class="card-modal-close" type="button" data-card-modal-close aria-label="Закрыть карточку">Закрыть</button>
-      </div>
-      <div class="card-modal-content" id="card-modal-content"></div>
+  <dialog class="card-modal" id="card-modal" aria-labelledby="card-modal-title">
+    <div class="card-modal-toolbar">
+      <div class="card-modal-toolbar-actions" id="card-modal-toolbar-actions"></div>
+      <button class="button-secondary card-modal-close" type="button" data-card-modal-close aria-label="Закрыть карточку">Закрыть</button>
     </div>
-  </div>
+    <div id="card-modal-content"></div>
+  </dialog>
 {% endblock %}
 
 {% block scripts %}
