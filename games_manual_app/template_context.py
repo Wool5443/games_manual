@@ -8,6 +8,7 @@ from .access import (
     get_current_user_role,
     is_admin_authenticated,
     is_google_auth_enabled,
+    is_local_admin_enabled,
     is_own_game,
 )
 from .config import ADMIN_GAMES_ORDER_OPTIONS, SORTABLE_FIELDS
@@ -30,5 +31,6 @@ def register_template_context(app: Flask) -> None:
             "is_own_game": is_own_game,
             "is_admin_authenticated": is_admin_authenticated(),
             "google_auth_enabled": is_google_auth_enabled(),
+            "local_admin_enabled": is_local_admin_enabled(),
             "versioned_static": versioned_static,
         }

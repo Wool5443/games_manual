@@ -58,7 +58,7 @@ class ViewTests(unittest.TestCase):
             patcher.start()
             cls.addClassCleanup(patcher.stop)
         cls.app = create_app()
-        cls.app.config.update(TESTING=True, SECRET_KEY="test-only-secret")
+        cls.app.config.update(TESTING=True, SECRET_KEY="test-only-secret", LOCAL_ADMIN=False)
         cls.reset_database()
 
     @classmethod

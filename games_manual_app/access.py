@@ -1,7 +1,7 @@
 import sqlite3
 from functools import wraps
 
-from flask import flash, redirect, request, session, url_for
+from flask import current_app, flash, redirect, request, session, url_for
 
 from .config import ACCESS_ROLE_LABELS, ADMIN_EMAILS, GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, PUBLIC_BASE_URL
 from .db import get_db, init_db
@@ -13,7 +13,17 @@ def is_google_auth_enabled() -> bool:
     return bool(GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET and oauth.create_client("google"))
 
 
+def is_local_admin_enabled() -> bool:
+    return bool(current_app.config.get("LOCAL_ADMIN", False))
+
+
 def get_current_user() -> dict[str, str] | None:
+    if is_local_admin_enabled():
+        return {
+            "email": "local-admin@example.test",
+            "name": "Локальный администратор",
+            "email_verified": True,
+        }
     user = session.get("user")
     return user if isinstance(user, dict) else None
 
@@ -82,6 +92,8 @@ def apply_invite_to_email(token: str | None, email: str) -> tuple[bool, str]:
 
 
 def get_current_user_role() -> str | None:
+    if is_local_admin_enabled():
+        return "admin"
     user = get_current_user()
     if not user:
         return None

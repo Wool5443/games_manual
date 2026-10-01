@@ -52,6 +52,7 @@
   font-size: 0.875rem;
 }
 .auth-controls form { margin: 0; }
+.auth-user-local { max-width: none; white-space: normal; }
 
 @media (max-width: 1000px) and (min-width: 861px) {
   .site-header .container { gap: 0.75rem; }

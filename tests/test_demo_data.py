@@ -25,7 +25,7 @@ class DemoDataTests(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
         self.app = create_app()
-        self.app.config.update(TESTING=True, SECRET_KEY="demo-test-secret")
+        self.app.config.update(TESTING=True, SECRET_KEY="demo-test-secret", LOCAL_ADMIN=False)
 
     def count_games(self, db):
         return db.execute("SELECT COUNT(*) FROM games").fetchone()[0]

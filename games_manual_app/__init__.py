@@ -1,3 +1,5 @@
+import os
+
 from flask import Flask
 
 from .config import BASE_DIR, MAX_CONTENT_LENGTH, SECRET_KEY
@@ -17,6 +19,9 @@ def create_app() -> Flask:
     )
     app.config["SECRET_KEY"] = SECRET_KEY
     app.config["MAX_CONTENT_LENGTH"] = MAX_CONTENT_LENGTH
+    app.config["LOCAL_ADMIN"] = os.getenv("LOCAL_ADMIN", "0").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
 
     init_extensions(app)
     register_db(app)

@@ -44,7 +44,9 @@
             {% endif %}
           </nav>
           <div class="header-tools">
-            {% if current_user %}
+            {% if local_admin_enabled %}
+              <span class="auth-user auth-user-local">Локальный администратор</span>
+            {% elif current_user %}
               <div class="auth-controls">
                 <span class="auth-user">{{ current_user.get('name') or current_user.get('email') }}</span>
                 <form method="post" action="{{ url_for('logout') }}">
