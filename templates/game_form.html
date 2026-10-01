@@ -20,34 +20,6 @@
         <input type="text" name="title" value="{{ game.get('title', '') }}" required>
       </label>
 
-      <label class="dropdown-field">
-        <span>Тип <strong class="required-mark">*</strong></span>
-        {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
-        <div class="dropdown-multiselect" data-dropdown-multiselect>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label>
-              {% if selected_types %}
-                {{ selected_types|join(', ') }}
-              {% else %}
-                Выберите типы
-              {% endif %}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel dropdown-types-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list dropdown-types-list">
-              {% for game_type in game_types %}
-                <label class="dropdown-option">
-                  <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %} data-dropdown-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ game_type }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
-      </label>
-
       <label>
         <span>Цель <strong class="required-mark">*</strong></span>
         <input type="text" name="goal" value="{{ game.get('goal', '') }}" required>
@@ -58,27 +30,14 @@
         <input type="text" name="participants" value="{{ game.get('participants', '') }}" required>
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Возрастная категория <strong class="required-mark">*</strong></span>
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label>
-              {{ game.get('age_category', '') or 'Выберите возраст' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              {% for age in age_options %}
-                <label class="dropdown-option">
-                  <input type="radio" name="age_category" value="{{ age }}" {% if game.get('age_category', '') == age %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ age }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="age_category" required>
+          <option value="">Выберите возраст</option>
+          {% for age in age_options %}
+            <option value="{{ age }}" {% if game.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
+          {% endfor %}
+        </select>
       </label>
 
       <label>
@@ -86,33 +45,33 @@
         <input type="text" name="duration" value="{{ game.get('duration', '') }}" required>
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Место проведения <strong class="required-mark">*</strong></span>
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label>
-              {{ game.get('location', '') or 'Выберите место' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              {% for location in location_options %}
-                <label class="dropdown-option">
-                  <input type="radio" name="location" value="{{ location }}" {% if game.get('location', '') == location %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ location }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="location" required>
+          <option value="">Выберите место</option>
+          {% for location in location_options %}
+            <option value="{{ location }}" {% if game.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
+          {% endfor %}
+        </select>
       </label>
 
       <label>
         <span>Необходимое оборудование</span>
         <input type="text" name="equipment" value="{{ game.get('equipment', '') }}">
       </label>
+
+      <fieldset class="game-types full-width">
+        <legend>Тип <strong class="required-mark">*</strong></legend>
+        {% set selected_types = parse_multi_categories(game.get('game_type', '')) %}
+        <div class="type-options">
+          {% for game_type in game_types %}
+            <label class="checkbox-row">
+              <input type="checkbox" name="game_type" value="{{ game_type }}" {% if game_type in selected_types %}checked{% endif %}>
+              <span>{{ game_type }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </fieldset>
 
       <label class="full-width">
         <span>Правила <strong class="required-mark">*</strong></span>

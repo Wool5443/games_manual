@@ -18,33 +18,14 @@
         <input type="text" name="search" value="{{ filters.get('search', '') }}" placeholder="Название, цель, правила...">
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Тип</span>
-        <input type="hidden" name="game_type" value="{{ filters.get('game_type', '') }}">
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любой тип">
-              {{ filters.get('game_type', '') or 'Любой тип' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              <label class="dropdown-option">
-                <input type="radio" name="game_type_choice" value="" {% if not filters.get('game_type', '') %}checked{% endif %} data-dropdown-single-option>
-                <span class="dropdown-option-mark" aria-hidden="true"></span>
-                <span class="dropdown-option-label">Любой тип</span>
-              </label>
-              {% for game_type in game_types %}
-                <label class="dropdown-option">
-                  <input type="radio" name="game_type_choice" value="{{ game_type }}" {% if filters.get('game_type', '') == game_type %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ game_type }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="game_type">
+          <option value="">Любой тип</option>
+          {% for game_type in game_types %}
+            <option value="{{ game_type }}" {% if filters.get('game_type', '') == game_type %}selected{% endif %}>{{ game_type }}</option>
+          {% endfor %}
+        </select>
       </label>
 
       <label>
@@ -62,33 +43,14 @@
         <input type="text" name="participants" value="{{ filters.get('participants', '') }}">
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Возрастная категория</span>
-        <input type="hidden" name="age_category" value="{{ filters.get('age_category', '') }}">
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любая">
-              {{ filters.get('age_category', '') or 'Любая' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              <label class="dropdown-option">
-                <input type="radio" name="age_category_choice" value="" {% if not filters.get('age_category', '') %}checked{% endif %} data-dropdown-single-option>
-                <span class="dropdown-option-mark" aria-hidden="true"></span>
-                <span class="dropdown-option-label">Любая</span>
-              </label>
-              {% for age in age_options %}
-                <label class="dropdown-option">
-                  <input type="radio" name="age_category_choice" value="{{ age }}" {% if filters.get('age_category', '') == age %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ age }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="age_category">
+          <option value="">Любая</option>
+          {% for age in age_options %}
+            <option value="{{ age }}" {% if filters.get('age_category', '') == age %}selected{% endif %}>{{ age }}</option>
+          {% endfor %}
+        </select>
       </label>
 
       <label>
@@ -96,48 +58,26 @@
         <input type="text" name="duration" value="{{ filters.get('duration', '') }}">
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Место проведения</span>
-        <input type="hidden" name="location" value="{{ filters.get('location', '') }}">
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Любое">
-              {{ filters.get('location', '') or 'Любое' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              <label class="dropdown-option">
-                <input type="radio" name="location_choice" value="" {% if not filters.get('location', '') %}checked{% endif %} data-dropdown-single-option>
-                <span class="dropdown-option-mark" aria-hidden="true"></span>
-                <span class="dropdown-option-label">Любое</span>
-              </label>
-              {% for location in location_options %}
-                <label class="dropdown-option">
-                  <input type="radio" name="location_choice" value="{{ location }}" {% if filters.get('location', '') == location %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ location }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="location">
+          <option value="">Любое</option>
+          {% for location in location_options %}
+            <option value="{{ location }}" {% if filters.get('location', '') == location %}selected{% endif %}>{{ location }}</option>
+          {% endfor %}
+        </select>
       </label>
 
       <div class="equipment-filter">
         <div class="equipment-filter-header">
-          <span>Оборудование</span>
-          <label class="toggle-field" title="Нет">
-            <input class="toggle-input" type="checkbox" name="no_equipment" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
-            <span class="toggle-slider" aria-hidden="true">
-              <span class="toggle-thumb"></span>
-            </span>
-            <span class="toggle-text">Нет</span>
+          <label for="equipment-filter">Оборудование</label>
+          <label class="checkbox-row">
+            <input type="checkbox" name="no_equipment" aria-label="Без оборудования" value="1" {% if filters.get('no_equipment') == '1' %}checked{% endif %}>
+            <span>Нет</span>
           </label>
         </div>
-        <div class="equipment-filter-control">
-          <input type="text" name="equipment" value="{{ filters.get('equipment', '') }}">
+        <div>
+          <input id="equipment-filter" type="text" name="equipment" value="{{ filters.get('equipment', '') }}">
         </div>
       </div>
 
@@ -151,55 +91,21 @@
         <input type="text" name="files_json" value="{{ filters.get('files_json', '') }}" placeholder="Имя файла">
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Сортировка</span>
-        <input type="hidden" name="sort" value="{{ sort }}">
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите сортировку">
-              {{ sortable_fields.get(sort, 'Выберите сортировку') }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              {% for field, label in sortable_fields.items() %}
-                <label class="dropdown-option">
-                  <input type="radio" name="sort_choice" value="{{ field }}" {% if sort == field %}checked{% endif %} data-dropdown-single-option>
-                  <span class="dropdown-option-mark" aria-hidden="true"></span>
-                  <span class="dropdown-option-label">{{ label }}</span>
-                </label>
-              {% endfor %}
-            </div>
-          </div>
-        </div>
+        <select name="sort">
+          {% for field, label in sortable_fields.items() %}
+            <option value="{{ field }}" {% if sort == field %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
       </label>
 
-      <label class="dropdown-field">
+      <label>
         <span>Порядок</span>
-        <input type="hidden" name="order" value="{{ order }}">
-        <div class="dropdown-multiselect" data-dropdown-single>
-          <button class="dropdown-multiselect-trigger" type="button" aria-expanded="false" data-dropdown-trigger>
-            <span class="dropdown-multiselect-text" data-dropdown-label data-placeholder="Выберите порядок">
-              {{ 'По убыванию' if order == 'desc' else 'По возрастанию' }}
-            </span>
-            <span class="dropdown-multiselect-arrow" aria-hidden="true"></span>
-          </button>
-          <div class="dropdown-multiselect-panel" hidden data-dropdown-panel>
-            <div class="dropdown-multiselect-list">
-              <label class="dropdown-option">
-                <input type="radio" name="order_choice" value="asc" {% if order == 'asc' %}checked{% endif %} data-dropdown-single-option>
-                <span class="dropdown-option-mark" aria-hidden="true"></span>
-                <span class="dropdown-option-label">По возрастанию</span>
-              </label>
-              <label class="dropdown-option">
-                <input type="radio" name="order_choice" value="desc" {% if order == 'desc' %}checked{% endif %} data-dropdown-single-option>
-                <span class="dropdown-option-mark" aria-hidden="true"></span>
-                <span class="dropdown-option-label">По убыванию</span>
-              </label>
-            </div>
-          </div>
-        </div>
+        <select name="order">
+          <option value="asc" {% if order == 'asc' %}selected{% endif %}>По возрастанию</option>
+          <option value="desc" {% if order == 'desc' %}selected{% endif %}>По убыванию</option>
+        </select>
       </label>
 
       <div class="actions filter-actions">

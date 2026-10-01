@@ -5,14 +5,47 @@ Run with: python -m unittest discover -s tests -v
 
 import tempfile
 import unittest
+from html.parser import HTMLParser
 from pathlib import Path
 from unittest.mock import patch
+
+from werkzeug.datastructures import MultiDict
 
 from games_manual_app import create_app
 from games_manual_app.db import get_db, init_db
 
 
+class FormControls(HTMLParser):
+    def __init__(self, html):
+        super().__init__()
+        self.selects = {}
+        self.inputs = []
+        self.current_select = None
+        self.feed(html)
+
+    def handle_starttag(self, tag, attrs):
+        attrs = dict(attrs)
+        if tag == "select":
+            self.current_select = attrs["name"]
+            self.selects[self.current_select] = {"attrs": attrs, "options": []}
+        elif tag == "option" and self.current_select:
+            self.selects[self.current_select]["options"].append(attrs)
+        elif tag == "input":
+            self.inputs.append(attrs)
+
+    def handle_endtag(self, tag):
+        if tag == "select":
+            self.current_select = None
+
+    def selected(self, name):
+        options = self.selects[name]["options"]
+        return next((option["value"] for option in options if "selected" in option), options[0]["value"])
+
+
 class ViewTests(unittest.TestCase):
+    LONG_TITLE = "ОченьДлинноеНазвание" * 12
+    LONG_TYPE = "ОченьДлиннаяКатегория" * 10
+
     @classmethod
     def setUpClass(cls):
         cls.temp_dir = tempfile.TemporaryDirectory()
@@ -26,11 +59,21 @@ class ViewTests(unittest.TestCase):
             cls.addClassCleanup(patcher.stop)
         cls.app = create_app()
         cls.app.config.update(TESTING=True, SECRET_KEY="test-only-secret")
+        cls.reset_database()
+
+    @classmethod
+    def reset_database(cls):
         with cls.app.app_context():
             init_db()
             db = get_db()
+            for table in ("games", "access_users", "game_types", "age_categories", "invite_links"):
+                db.execute(f"DELETE FROM {table}")
+            db.execute("DELETE FROM sqlite_sequence")
+            db.commit()
+            init_db()
             db.execute("INSERT INTO access_users (email, role) VALUES (?, ?)",
                        ("editor@example.test", "editor"))
+            db.execute("INSERT INTO game_types (name) VALUES (?)", (cls.LONG_TYPE,))
             db.executemany(
                 """INSERT INTO games (
                     title, game_type, goal, participants, age_category, duration,
@@ -44,11 +87,15 @@ class ViewTests(unittest.TestCase):
                     ("Beta game", "Бодряк", "Warm up", "4–6", "7+", "5 minutes",
                      "Помещение", "", "Other rules", "[]", "other@example.test",
                      "Other Editor", "2026-01-03 03:04:00"),
+                    (cls.LONG_TITLE, cls.LONG_TYPE, "Long content", "4–6", "10+", "10 minutes",
+                     "Помещение", "Rope", "Long rules", "[]", "other@example.test",
+                     "Other Editor", "2026-01-01 03:04:00"),
                 ],
             )
             db.commit()
 
     def setUp(self):
+        self.reset_database()
         self.client = self.app.test_client()
 
     def login(self, email):
@@ -76,8 +123,17 @@ class ViewTests(unittest.TestCase):
         self.assertIn("Beta game", html)
         self.assertNotIn("Alpha &lt;game&gt;", html)
 
+    def test_sorting_preserves_requested_order(self):
+        html = self.page("/games?sort=created_at&order=desc")
+        self.assertLess(html.index("Beta game"), html.index("Alpha &lt;game&gt;"))
+
     def test_empty_search(self):
         self.assertIn("Ничего не найдено", self.page("/games?search=missing-game"))
+
+    def test_long_titles_and_categories_render(self):
+        html = self.page("/games/3")
+        self.assertIn(self.LONG_TITLE, html)
+        self.assertIn(self.LONG_TYPE, html)
 
     def test_detail_and_missing_game(self):
         html = self.page("/games/1")
@@ -101,9 +157,52 @@ class ViewTests(unittest.TestCase):
         self.assertIn('name="files" multiple', self.page("/games/new"))
         html = self.page("/my-games/1/edit")
         for text in ('value="Бегалки" checked', 'value="Командообразование" checked',
-                     'value="10+" checked', 'value="Улица" checked',
                      'name="delete_files" value="rules.pdf"'):
             self.assertIn(text, html)
+        controls = FormControls(html)
+        self.assertEqual(controls.selected("age_category"), "10+")
+        self.assertEqual(controls.selected("location"), "Улица")
+        self.assertIn("required", controls.selects["age_category"]["attrs"])
+
+    def test_catalog_native_selects_preserve_query_values(self):
+        controls = FormControls(self.page("/games?game_type=Бегалки&age_category=10%2B&location=Улица&sort=duration&order=desc"))
+        for name, expected in (("game_type", "Бегалки"), ("age_category", "10+"),
+                               ("location", "Улица"), ("sort", "duration"), ("order", "desc")):
+            self.assertEqual(controls.selected(name), expected)
+        self.assertFalse(any(item.get("name", "").endswith("_choice") for item in controls.inputs))
+        self.assertFalse(any(item.get("type") == "hidden" and item.get("name") in controls.selects
+                             for item in controls.inputs))
+
+    def game_data(self, title="Edited game"):
+        return MultiDict([
+            ("title", title), ("game_type", "Бегалки"), ("game_type", "Командообразование"),
+            ("goal", "Cooperation"), ("participants", "8–12"), ("age_category", "12+"),
+            ("duration", "15 minutes"), ("location", "Улица"), ("equipment", "Ball"),
+            ("rules", "Updated rules"),
+        ])
+
+    def test_validation_failure_preserves_native_selections(self):
+        self.login("editor@example.test")
+        for path in ("/games/new", "/my-games/1/edit"):
+            with self.subTest(path=path):
+                response = self.client.post(path, data=self.game_data(title=""))
+                self.assertEqual(response.status_code, 200)
+                controls = FormControls(response.get_data(as_text=True))
+                self.assertEqual(controls.selected("age_category"), "12+")
+                self.assertEqual(controls.selected("location"), "Улица")
+                checked_types = [item["value"] for item in controls.inputs
+                                 if item.get("name") == "game_type" and "checked" in item]
+                self.assertEqual(set(checked_types), {"Бегалки", "Командообразование"})
+
+    def test_edit_submission_saves_multiple_types_and_selects(self):
+        self.login("editor@example.test")
+        response = self.client.post("/my-games/1/edit", data=self.game_data())
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            game = get_db().execute("SELECT * FROM games WHERE id = 1").fetchone()
+            self.assertEqual(game["game_type"], "Бегалки, Командообразование")
+            self.assertEqual(game["age_category"], "12+")
+            self.assertEqual(game["location"], "Улица")
 
     def test_admin_tabs_render(self):
         self.login("admin@example.test")
@@ -113,6 +212,39 @@ class ViewTests(unittest.TestCase):
                             ("tab=access", "editor@example.test")):
             with self.subTest(query=query):
                 self.assertIn(text, self.page("/admin?" + query))
+
+    def test_native_admin_role_and_delete_submissions(self):
+        self.login("admin@example.test")
+        controls = FormControls(self.page("/admin?tab=access"))
+        self.assertEqual(controls.selected("item_role"), "editor")
+        self.assertTrue(any(item.get("name") == "delete_item" and item.get("type") == "checkbox"
+                            for item in controls.inputs))
+        response = self.client.post("/admin/properties/access-users", data={
+            "item_id": "1", "item_email": "editor@example.test", "item_role": "admin",
+            "new_admins": "admin@example.test",
+        })
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            self.assertEqual(get_db().execute("SELECT role FROM access_users WHERE id = 1").fetchone()[0], "admin")
+        response = self.client.post("/admin/properties/access-users", data=MultiDict([
+            ("item_id", "1"), ("item_email", "editor@example.test"), ("item_role", "admin"),
+            ("item_id", "2"), ("item_email", "admin@example.test"), ("item_role", "admin"),
+            ("delete_item", "1"),
+        ]))
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            self.assertIsNone(get_db().execute("SELECT id FROM access_users WHERE id = 1").fetchone())
+
+    def test_native_property_delete_checkbox(self):
+        self.login("admin@example.test")
+        with self.app.app_context():
+            category_id = str(get_db().execute("SELECT id FROM game_types WHERE name = 'Black magic'").fetchone()[0])
+        response = self.client.post("/admin/properties/game-types", data={
+            "item_id": category_id, "item_name": "Black magic", "delete_item": category_id,
+        })
+        self.assertEqual(response.status_code, 302)
+        with self.app.app_context():
+            self.assertIsNone(get_db().execute("SELECT id FROM game_types WHERE id = ?", (category_id,)).fetchone())
 
     def test_protected_views_redirect_visitors(self):
         for path in ("/my-games", "/games/new", "/admin"):
