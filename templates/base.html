@@ -7,6 +7,8 @@
     <link rel="icon" type="image/svg+xml" href="{{ versioned_static('favicon.svg') }}">
     <link rel="stylesheet" href="{{ versioned_static('palette.css') }}">
     <link rel="stylesheet" href="{{ versioned_static('styles.css') }}">
+    <link rel="stylesheet" href="{{ versioned_static('forms.css') }}">
+    <link rel="stylesheet" href="{{ versioned_static('cards.css') }}">
   </head>
   <body>
     <header class="site-header">
@@ -64,27 +66,7 @@
       {% endwith %}
       {% block content %}{% endblock %}
     </main>
-    <script>
-      (function () {
-        const menuToggle = document.getElementById("menu-toggle");
-        const headerMenu = document.getElementById("header-menu");
-        if (menuToggle && headerMenu) {
-          menuToggle.addEventListener("click", function () {
-            const isOpen = headerMenu.classList.toggle("is-open");
-            menuToggle.setAttribute("aria-expanded", String(isOpen));
-          });
-
-          headerMenu.querySelectorAll("a, button").forEach((element) => {
-            element.addEventListener("click", function () {
-              if (window.innerWidth <= 860) {
-                headerMenu.classList.remove("is-open");
-                menuToggle.setAttribute("aria-expanded", "false");
-              }
-            });
-          });
-        }
-      })();
-    </script>
+    <script src="{{ versioned_static('site.js') }}"></script>
     {% block scripts %}{% endblock %}
   </body>
 </html>

@@ -8,6 +8,8 @@
   --text: #f5e8e4;
   --muted: #c8a9a2;
   --line: rgba(241, 216, 213, 0.12);
+  --control-border: rgba(240, 122, 122, 0.35);
+  --control-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
   --accent: #d64b4b;
   --accent-dark: #f07a7a;
   --accent-soft: rgba(214, 75, 75, 0.18);
