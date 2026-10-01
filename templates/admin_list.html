@@ -213,13 +213,13 @@
                 <td>{{ game['title'] }}</td>
                 <td>{{ game['game_type'] }}</td>
                 <td>{{ game['participants'] }}</td>
-                <td>{{ game['age_category'] }}</td>
+                <td class="table-nowrap">{{ game['age_category'] }}</td>
                 <td>{{ game['duration'] }}</td>
-                <td>{{ format_datetime(game['created_at']) }}</td>
-                <td>{{ parse_files_json(game['files_json'])|length }}</td>
+                <td class="table-nowrap">{{ format_datetime(game['created_at']) }}</td>
+                <td class="table-nowrap">{{ parse_files_json(game['files_json'])|length }}</td>
                 <td>
                   <div class="table-actions">
-                    <a href="{{ url_for('admin_edit_game', game_id=game['id']) }}">Редактировать</a>
+                    <a class="hero-action" href="{{ url_for('admin_edit_game', game_id=game['id']) }}">Редактировать</a>
                     <form method="post" action="{{ url_for('delete_game', game_id=game['id']) }}" onsubmit="return confirm('Удалить запись без возможности восстановления?');">
                       <button type="submit" class="button-danger">Удалить</button>
                     </form>
